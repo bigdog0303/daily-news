@@ -184,7 +184,30 @@ function setUS30Pct(pct){
   fill.style.width = w.toFixed(2) + '%';
   val.textContent = (pct>=0?'+':'') + pct.toFixed(2) + '%';
 }
+// ---- Live US30 price updater ----
+async function fetchUS30Live(){
+  try {
+    const url = "https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m";
+    const res = await fetch(url);
+    const data = await res.json();
+    const result = data.chart?.result?.[0];
+    if(!result) return;
 
+    const meta = result.meta;
+    const last = meta.regularMarketPrice;
+    const prev = meta.chartPreviousClose;
+
+    if (last && prev) {
+      setUS30From(last, prev);
+    }
+  } catch (e) {
+    console.error("US30 fetch error:", e);
+  }
+}
+
+// Update once on load + repeat every 60s
+fetchUS30Live();
+setInterval(fetchUS30Live, 60000);
 function setUS30From(last, prevClose){
   if(!isFinite(last) || !isFinite(prevClose) || prevClose === 0) return;
   const pct = ((last - prevClose) / prevClose) * 100;
