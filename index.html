@@ -5,13 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>High-impact USD — This Week</title>
 
-<!-- Make iOS/Safari paint dark behind the status bar -->
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <style>
-/* Fill the entire screen, including the iOS safe area, with dark bg */
 html, body {
   margin: 0;
   padding: 0;
@@ -21,8 +19,6 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
 }
-
-/* This fixed bar paints the notch/status area black on iOS */
 .statusbar {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -32,38 +28,27 @@ html, body {
   z-index: 9999;
   pointer-events: none;
 }
-
-*{box-sizing:border-box}
+* { box-sizing: border-box; }
 :root{
   --bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
   --panel:#121316; --panel2:#17181c; --ring:#2a2b31;
   --badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
   --accent-ring:#5a4b13; --high:#c63b3b;
 }
-
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
 }
-
-/* --- header (non-sticky so it never covers content) --- */
 header.top {
   padding: calc(8px + env(safe-area-inset-top, 0)) 16px 10px;
   border-bottom: 1px solid var(--ring);
   background: var(--bg);
 }
-h1 {
-  margin: 0 0 2px;
-  font-size: 28px;
-  letter-spacing: .2px;
-  font-weight: 800;
-}
+h1 { margin: 0 0 2px; font-size: 28px; letter-spacing: .2px; font-weight: 800; }
 h1 .muted { color: #b9bac2; font-weight: 700; }
 .small { color: var(--muted); font-size: 12px }
-
-/* --- content --- */
 main { max-width: 880px; margin: 0 auto; padding: 14px 12px 40px }
 .note {
   display:flex; align-items:center; justify-content:center; min-height:48px;
@@ -97,7 +82,6 @@ ul { list-style:none; margin:0; padding:0 }
 </style>
 </head>
 <body>
-<!-- Paint the iOS safe-area (notch/status bar) dark -->
 <div class="statusbar" aria-hidden="true"></div>
 
 <header class="top">
@@ -126,7 +110,7 @@ ul { list-style:none; margin:0; padding:0 }
 </template>
 
 <script>
-const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev';
+const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev/';
 
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 async function fetchWithRetry(url, tries=4){
