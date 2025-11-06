@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Important Headlines</title>
+<meta name="theme-color" content="#0c0c0e" />
+<style>
+html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+:root{--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;--panel2:#17181c;--ring:#2a2b31;--accent:#ffd84a;--accent-ink:#201b07}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:var(--text)}
+header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring)}
+h1{margin:0 0 2px;font-size:28px;font-weight:800}
+.nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tab{border:1px solid var(--ring);background:#17181c;color:var(--text);padding:8px 12px;border-radius:999px;font-size:14px;text-decoration:none}
+.tab.active{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:800}
+main{max-width:880px;margin:0 auto;padding:14px 12px 60px}
+.card{border:1px solid var(--ring);background:var(--panel2);border-radius:16px;padding:14px;margin:14px 0}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=file]{display:none}
+.btn{border:1px solid var(--ring);background:#1f2025;color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer;font-size:14px}
+.small{color:var(--muted);font-size:12px}
+ul{list-style:none;margin:0;padding:0}
+.item{border:1px solid var(--ring);background:#15161a;border-radius:16px;padding:14px;margin:12px 0}
+.item h3{margin:0 0 6px;font-size:18px}
+.meta{color:var(--muted);font-size:12px;margin-bottom:6px}
+a.link{color:#c9d4ff;text-decoration:none}
+a.link:hover{text-decoration:underline}
+.err{ color:#ff9b9b; margin-top:8px; text-align:center }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Important Headlines</h1>
+  <div class="nav">
+    <a class="tab" href="index.html">Events</a>
+    <a class="tab" href="summary.html">AI Summary</a>
+    <a class="tab active" href="headlines.html">Headlines</a>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="controls">
+      <button id="reload" class="btn">Reload headlines.json</button>
+      <label for="file" class="btn">Upload CSV</label>
+      <input id="file" type="file" accept=".csv" />
+      <span class="small">CSV headers: <code>Title, Source, Link, Time</code></span>
+    </div>
+    <div id="status" class="small" style="margin-top:8px"></div>
+  </div>
+
+  <div class="card">
+    <ul id="list"></ul>
+    <div id="err" class="err" hidden></div>
+  </div>
+</main>
+
+<script>
+// Try to load from a repo file: headlines.json (array of {title, source, url, time})
+const DEFAULT_JSON = 'headlines.json?cb=' + Date.now();
+
+function row({title, source, url, time}){
+  const li = document.createElement('li');
+  li.className = 'item';
+  const safeTitle = title || '(untitled)';
+  const meta = [source, time].filter(Boolean).join(' · ');
+  li.innerHTML = `
+    <h3>${safeTitle}</h3>
+    <div class="meta">${meta || ''}</div>
+    ${url ? `<a class="link" target="_blank" rel="noopener" href="${url}">Open link ↗</a>` : ''}
+  `;
+  return li;
+}
+
+async function loadJson(){
+  const status = document.getElementById('status');
+  const list = document.getElementById('list');
+  const err  = document.getElementById('err');
+  status.textContent = 'Loading headlines.json…';
+  try{
+    const r = await fetch(DEFAULT_JSON, {cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const items = await r.json();
+    list.innerHTML = '';
+    (items||[]).forEach(it=> list.appendChild(row(it)));
+    err.hidden = (items && items.length);
+    if(!items || !items.length){ err.hidden=false; err.textContent='No headlines found.'; }
+    status.textContent = 'Loaded';
+  }catch(e){
+    list.innerHTML = '';
+    err.hidden = false;
+    err.textContent = 'Failed to load headlines.json (' + (e.message||e) + ')';
+    status.textContent = '';
+    console.error(e);
+  }
+}
+
+function parseCsv(text){
+  const lines = text.replace(/\r/g,'').split('\n').filter(Boolean);
+  if(!lines.length) return [];
+  const header = lines[0].split(',').map(s=>s.trim().toLowerCase());
+  const iT = header.indexOf('title');
+  const iS = header.indexOf('source');
+  const iL = header.indexOf('link');
+  const iTime = header.indexOf('time');
+  return lines.slice(1).map(line=>{
+    const cols = line.split(',').map(s=>s.trim());
+    return {
+      title: cols[iT] || '',
+      source: cols[iS] || '',
+      url: cols[iL] || '',
+      time: cols[iTime] || ''
+    };
+  });
+}
+
+document.getElementById('reload').onclick = loadJson;
+document.getElementById('file').addEventListener('change', async e=>{
+  const f = e.target.files?.[0];
+  if(!f) return;
+  const text = await f.text();
+  const items = parseCsv(text);
+  const list = document.getElementById('list');
+  const err  = document.getElementById('err');
+  list.innerHTML = '';
+  items.forEach(it=> list.appendChild(row(it)));
+  err.hidden = items.length>0;
+  if(!items.length){ err.hidden=false; err.textContent='No rows parsed from CSV.'; }
+  document.getElementById('status').textContent = 'Loaded from CSV (local)';
+});
+
+loadJson();
+</script>
+</body>
+</html>
