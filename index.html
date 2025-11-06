@@ -88,17 +88,17 @@ ul{list-style:none;margin:0;padding:0}
 </template>
 
 <script>
-// *** IMPORTANT: your worker (exact) ***
+// ---------- CONFIG ----------
 const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev";
 
 // ---------- helpers ----------
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 async function fetchTextWithRetry(urls, tries=3){
   let lastErr;
-  for (const base of urls){
+  for (const url of urls){
     for(let i=0;i<tries;i++){
       try{
-        const r = await fetch(base, { cache:'no-store' });
+        const r = await fetch(url, { cache:'no-store' });
         if (r.ok) return await r.text();
         lastErr = new Error('HTTP '+r.status);
       }catch(e){ lastErr = e; }
@@ -108,12 +108,27 @@ async function fetchTextWithRetry(urls, tries=3){
   throw lastErr;
 }
 function parseFF(xml){
-  // quick XML parse (no external libs)
-  const evs = [...xml.matchAll(/<event>(.*?)<\/event>/gs)].map(m=>{
-    const b=m[1]; const g=t=>(b.match(new RegExp(`<${t}>([\\s\\S]*?)<\\/${t}>`))||[])[1]||'';
-    return { title:g('title'), datetime:g('date'), impact:g('impact'), currency:g('currency'), actual:g('actual') };
+  // tolerant XML parse
+  const blocks = [...xml.matchAll(/<event>([\s\S]*?)<\/event>/gi)];
+  const pick = (b, tag) => {
+    const m = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i').exec(b);
+    return m ? m[1].trim() : '';
+  };
+  const items = blocks.map(x=>{
+    const b = x[1];
+    return {
+      title: pick(b,'title'),
+      datetime: pick(b,'date'),
+      impact: pick(b,'impact'),
+      currency: pick(b,'currency'),
+      actual: pick(b,'actual')
+    };
   });
-  return evs.filter(e=>e.currency==='USD' && e.impact==='High');
+  // Filter: USD + any case variant of "High"
+  return items.filter(e =>
+    (e.currency || '').toUpperCase() === 'USD' &&
+    /high/i.test(e.impact || '')
+  );
 }
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
@@ -135,19 +150,21 @@ function setUS30Pct(pct){
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
 }
 async function fetchUS30(){
-  const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
-  const url = `${WORKER}/?url=${target}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  const meta = data.chart?.result?.[0]?.meta;
-  if(meta){
-    const last = meta.regularMarketPrice;
-    const prev = meta.chartPreviousClose;
-    if(last && prev){
-      const pct = ((last-prev)/prev)*100;
-      setUS30Pct(pct);
+  try{
+    const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
+    const url = `${WORKER}/?url=${target}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const meta = data.chart?.result?.[0]?.meta;
+    if(meta){
+      const last = meta.regularMarketPrice;
+      const prev = meta.chartPreviousClose;
+      if(last && prev){
+        const pct = ((last-prev)/prev)*100;
+        setUS30Pct(pct);
+      }
     }
-  }
+  }catch(e){ /* ignore blips */ }
 }
 fetchUS30();
 setInterval(fetchUS30, 60000);
@@ -162,6 +179,7 @@ setInterval(fetchUS30, 60000);
     const ffUrls = [
       `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
       `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.xml")}`,
+      `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_this.xml")}`,
     ];
     const xml = await fetchTextWithRetry(ffUrls, 2);
     const items = parseFF(xml);
