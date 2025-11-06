@@ -88,108 +88,121 @@ ul{list-style:none;margin:0;padding:0}
 </template>
 
 <script>
+// *** IMPORTANT: your worker (exact) ***
 const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev";
 
-const sleep = ms => new Promise(r=>setTimeout(r,ms));
-async function fetchWithRetry(url, tries=4){
+// ---------- helpers ----------
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+async function fetchTextWithRetry(urls, tries=3){
   let lastErr;
-  for(let i=0;i<tries;i++){
-    try{
-      const r = await fetch(url,{cache:'no-store'});
-      if(r.ok) return await r.json();
-      lastErr = new Error('HTTP '+r.status);
-    }catch(e){ lastErr=e; }
-    await sleep(600*(i+1));
+  for (const base of urls){
+    for(let i=0;i<tries;i++){
+      try{
+        const r = await fetch(base, { cache:'no-store' });
+        if (r.ok) return await r.text();
+        lastErr = new Error('HTTP '+r.status);
+      }catch(e){ lastErr = e; }
+      await sleep(500 * (i+1));
+    }
   }
   throw lastErr;
 }
+function parseFF(xml){
+  // quick XML parse (no external libs)
+  const evs = [...xml.matchAll(/<event>(.*?)<\/event>/gs)].map(m=>{
+    const b=m[1]; const g=t=>(b.match(new RegExp(`<${t}>([\\s\\S]*?)<\\/${t}>`))||[])[1]||'';
+    return { title:g('title'), datetime:g('date'), impact:g('impact'), currency:g('currency'), actual:g('actual') };
+  });
+  return evs.filter(e=>e.currency==='USD' && e.impact==='High');
+}
+function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
+function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-(async function(){
-  const list=document.getElementById('list');
-  const note=document.getElementById('note');
-  const err=document.getElementById('err');
-  document.getElementById('now').textContent=
-    new Intl.DateTimeFormat([],{hour:'2-digit',minute:'2-digit'}).format(new Date());
+// ---------- UI init ----------
+document.getElementById('now').textContent =
+  new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
-  try{
-    const payload = await fetchWithRetry(WORKER,4);
-    if(!payload.ok) throw new Error(payload.error||'Proxy error');
-
-    const items=payload.items||[];
-    const tpl=document.getElementById('row');
-    const fD=new Intl.DateTimeFormat([],{month:'short',day:'2-digit'});
-    const fT=new Intl.DateTimeFormat([],{hour:'2-digit',minute:'2-digit'});
-    const today=new Date().toISOString().slice(0,10);
-
-    list.innerHTML='';
-    let todays=0;
-    for(const e of items){
-      const dt=new Date(e.datetime);
-      if(isNaN(dt.getTime())) continue;
-      const li=tpl.content.firstElementChild.cloneNode(true);
-      const isToday=(dt.toISOString().slice(0,10)===today);
-      if(isToday){li.classList.add('today');todays++;}
-      li.querySelector('.title').textContent=e.title;
-      const badges=li.querySelector('.badges');
-      const b1=document.createElement('span');b1.className='badge';b1.textContent='USD';badges.appendChild(b1);
-      const b2=document.createElement('span');b2.className='badge high';b2.textContent='High';badges.appendChild(b2);
-      if(isToday){const b3=document.createElement('span');b3.className='badge today';b3.textContent='Today';badges.appendChild(b3);}
-      li.querySelector('.when').textContent=`${fD.format(dt)} at ${fT.format(dt)}`;
-      li.querySelector('.meta').textContent=e.actual?`Impact: High · ${e.actual}`:'Impact: High';
-      list.appendChild(li);
-    }
-
-    note.textContent=`Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`+
-                     (payload.stale?' (cached)':'');
-    document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
-    err.hidden=items.length!==0;
-    if(items.length===0) err.textContent='No USD high-impact events found.';
-  }catch(e){
-    note.textContent='';err.hidden=false;err.textContent='Could not load from proxy: '+(e.message||e);
-    console.error(e);
-  }
-})();
-
-/* ---- US30 heatbar logic ---- */
+// ---------- US30 mini heatbar ----------
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
   if(!val||!fill) return;
-  const CAP=2;
-  const mag=Math.min(Math.abs(pct),CAP);
-  const half=50;
-  const w=(mag/CAP)*half;
+  const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
   fill.classList.remove('pos','neg');
   if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
   else{fill.classList.add('neg');val.style.color='#ef4444';}
   fill.style.width=w.toFixed(2)+'%';
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
 }
-
-function setUS30From(last,prevClose){
-  if(!isFinite(last)||!isFinite(prevClose)||prevClose===0)return;
-  const pct=((last-prevClose)/prevClose)*100;
-  setUS30Pct(pct);
+async function fetchUS30(){
+  const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
+  const url = `${WORKER}/?url=${target}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const meta = data.chart?.result?.[0]?.meta;
+  if(meta){
+    const last = meta.regularMarketPrice;
+    const prev = meta.chartPreviousClose;
+    if(last && prev){
+      const pct = ((last-prev)/prev)*100;
+      setUS30Pct(pct);
+    }
+  }
 }
+fetchUS30();
+setInterval(fetchUS30, 60000);
 
-/* ---- Live US30 updater via Cloudflare Worker ---- */
-async function fetchUS30Live(){
+// ---------- ForexFactory via proxy (XML -> JSON in browser) ----------
+(async function(){
+  const list = document.getElementById('list');
+  const note = document.getElementById('note');
+  const err  = document.getElementById('err');
+
   try{
-    const target=encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
-    const proxyUrl=`${WORKER}/?url=${target}`;
-    const res=await fetch(proxyUrl);
-    const data=await res.json();
-    const result=data.chart?.result?.[0];
-    if(!result)return;
-    const meta=result.meta;
-    const last=meta.regularMarketPrice;
-    const prev=meta.chartPreviousClose;
-    if(last&&prev){setUS30From(last,prev);}
-  }catch(e){console.error("US30 fetch error:",e);}
-}
+    const ffUrls = [
+      `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
+      `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.xml")}`,
+    ];
+    const xml = await fetchTextWithRetry(ffUrls, 2);
+    const items = parseFF(xml);
 
-fetchUS30Live();
-setInterval(fetchUS30Live,60000);
+    list.innerHTML = '';
+    const tpl = document.getElementById('row');
+    const todayKey = new Date().toISOString().slice(0,10);
+    let todays = 0;
+
+    for (const e of items){
+      const dt = new Date(e.datetime);
+      if (isNaN(dt)) continue;
+
+      const li = tpl.content.firstElementChild.cloneNode(true);
+      const isToday = (dt.toISOString().slice(0,10) === todayKey);
+      if (isToday){ li.classList.add('today'); todays++; }
+
+      li.querySelector('.title').textContent = e.title;
+      const badges = li.querySelector('.badges');
+      const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+      const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+      if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+
+      li.querySelector('.when').textContent = `${monthDay(dt)} at ${hhmm(dt)}`;
+      li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+      list.appendChild(li);
+    }
+
+    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+    err.hidden = items.length !== 0;
+    if(items.length === 0) err.textContent = 'No USD high-impact events found.';
+
+  }catch(e){
+    note.textContent = '';
+    err.hidden = false;
+    err.textContent = 'Could not load from proxy: ' + (e.message || e);
+    console.error(e);
+  }
+})();
 </script>
 </body>
 </html>
