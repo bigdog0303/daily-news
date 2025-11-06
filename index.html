@@ -3,32 +3,24 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>High-impact USD — This Month</title>
+<title>High-impact USD — Live</title>
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
 html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
 .statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
-:root{
-  --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
-  --panel:#121316;--panel2:#17181c;--ring:#2a2b31;
-  --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
-  --accent-ring:#5a4b13;--high:#c63b3b;
-}
+:root{--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;--panel:#121316;--panel2:#17181c;--ring:#2a2b31;--badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;--accent-ring:#5a4b13;--high:#c63b3b}
 body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
 header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
-h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .small{color:var(--muted);font-size:12px}
 main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
-.note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
-
-/* tabs */
-.tabs{display:flex;gap:8px;margin:8px 0 0}
+.note{display:flex;align-items:center;justify-content:center;min-height:44px;margin:14px 0 12px;padding:8px 12px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
 .tab{border:1px solid var(--ring);background:var(--panel2);color:#d7d7dc;padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer}
 .tab.active{background:var(--accent-ink);border-color:var(--accent-ring);color:#ffe899}
-
-/* list layout */
+/* list */
 ul{list-style:none;margin:0;padding:0}
 .item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .left{width:8px;background:var(--ring)}
@@ -44,17 +36,15 @@ ul{list-style:none;margin:0;padding:0}
 .item.today .left{background:var(--accent)}
 .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
 .err{color:#ff9b9b;margin-top:8px;text-align:center}
-
 /* heatbar */
-.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
+.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
 .heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
 .heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
 .heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
-.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
-.heatmini .fill.pos{left:50%;background:#1f5d2f}
-.heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
-
+.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease}
+.heatmini .pos{left:50%;background:#1f5d2f}
+.heatmini .neg{right:50%;left:auto;background:#7a1f1f}
 /* calendar */
 .cal-wrap{border:1px solid var(--ring);border-radius:16px;background:var(--panel2);padding:10px 10px 6px;margin:14px 0}
 .cal-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 10px}
@@ -76,20 +66,19 @@ ul{list-style:none;margin:0;padding:0}
 </head>
 <body>
 <div class="statusbar" aria-hidden="true"></div>
+
 <header class="top">
   <div class="small" id="now"></div>
-  <h1>High-impact USD events
-    <div class="heatmini">
+  <h1>
+    High-impact USD events
+    <span class="heatmini">
       <span class="badge">US30</span>
-      <div class="bar">
-        <div class="zero"></div>
-        <div id="hbFill" class="fill"></div>
-      </div>
+      <span class="bar"><span class="zero"></span><span id="hbFill" class=""></span></span>
       <span id="hbVal" class="val">+0.00%</span>
-    </div>
+    </span>
   </h1>
   <div class="small" id="updated"></div>
-  <div class="tabs">
+  <div class="row">
     <button id="tabList" class="tab active">List</button>
     <button id="tabCal"  class="tab">Calendar</button>
   </div>
@@ -98,14 +87,12 @@ ul{list-style:none;margin:0;padding:0}
 <main>
   <div class="note" id="note">Loading…</div>
 
-  <!-- LIST VIEW -->
   <section id="viewList">
     <ul id="list"></ul>
     <div class="err" id="err" hidden></div>
-    <div class="footer">Data via ForexFactory (proxied)</div>
+    <div class="footer">Data via ForexFactory (through your Worker)</div>
   </section>
 
-  <!-- CALENDAR VIEW -->
   <section id="viewCal" style="display:none">
     <div class="cal-wrap">
       <div class="cal-head">
@@ -134,288 +121,121 @@ ul{list-style:none;margin:0;padding:0}
 </template>
 
 <script>
-// ===== CONFIG =====
-const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev"; // exact
-const CACHE_KEY = "ff_usd_high_cache_month_v1";
+/* ========= CONFIG ========= */
+const WORKER = "https://YOUR-WORKER-NAME.YOUR-SUBDOMAIN.workers.dev"; // <-- replace
 
-// Seed (just in case nothing returns)
-const SEED_ITEMS = [
-  { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-  { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
-  { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-];
+/* ========= UTIL ========= */
+function fmtYMD(d){return d.toISOString().slice(0,10)}
+function monthStart(d){return new Date(d.getFullYear(),d.getMonth(),1)}
+function monthEnd(d){return new Date(d.getFullYear(),d.getMonth()+1,0,23,59,59,999)}
+function monthDay(dt){return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt)}
+function hhmm(dt){return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt)}
+function startMon(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const dw=x.getDay();const diff=(dw===0?-6:1-dw);x.setDate(x.getDate()+diff);x.setHours(0,0,0,0);return x}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
 
-// ===== helpers =====
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-function monthStart(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-function monthEnd(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59,999); }
-function fmtYMD(d){ return d.toISOString().slice(0,10); }
-function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
-function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
-function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
-function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
-
-async function fetchText(url){ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }
-async function fetchTextWithRetry(urls, tries=2){
-  let lastErr;
-  for(const u of urls){
-    for(let i=0;i<tries;i++){
-      try{ return await fetchText(u); }catch(e){ lastErr=e; await sleep(400*(i+1)); }
-    }
-  }
-  throw lastErr;
-}
-function parseXML(xmlString){
-  const doc = new DOMParser().parseFromString(xmlString, "text/xml");
-  const events = Array.from(doc.getElementsByTagName("event")).map(ev => ({
-    title: (ev.getElementsByTagName("title")[0]?.textContent||"").trim(),
-    datetime: (ev.getElementsByTagName("date")[0]?.textContent||"").trim(),
-    impact: (ev.getElementsByTagName("impact")[0]?.textContent||"").trim(),
-    currency: (ev.getElementsByTagName("currency")[0]?.textContent||"").trim(),
-    actual: (ev.getElementsByTagName("actual")[0]?.textContent||"").trim(),
-  }));
-  return events.filter(e => (e.currency||"").toUpperCase()==="USD" && /high/i.test(e.impact||""));
-}
-function dedupe(items){
-  const map=new Map();
-  for(const e of items){
-    const key = (e.title||"").toLowerCase()+"|"+(e.datetime||"");
-    if(!map.has(key)) map.set(key,e);
-  }
-  return [...map.values()];
-}
-
-// ===== US30 mini heatbar (via proxy ?url=) =====
+/* ========= HEATBAR ========= */
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
   if(!val||!fill) return;
-  const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
-  fill.classList.remove('pos','neg');
-  if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
-  else{fill.classList.add('neg');val.style.color='#ef4444';}
-  fill.style.width=w.toFixed(2)+'%';
-  val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+  const cap=2, w=Math.min(Math.abs(pct),cap)/cap*50;
+  fill.className = pct>=0 ? "fill pos" : "fill neg";
+  fill.style.width = w.toFixed(2)+"%";
+  val.textContent = (pct>=0?"+":"")+pct.toFixed(2)+"%";
+  val.style.color = pct>=0 ? "#22c55e" : "#ef4444";
 }
 async function fetchUS30(){
   try{
-    const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
-    const url = `${WORKER}/?url=${target}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const meta = data.chart?.result?.[0]?.meta;
+    const target=encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
+    const res=await fetch(`${WORKER}?url=${target}`);
+    const data=await res.json();
+    const meta=data.chart?.result?.[0]?.meta;
     if(meta){
-      const last = meta.regularMarketPrice;
-      const prev = meta.chartPreviousClose;
-      if(last && prev){
-        const pct = ((last-prev)/prev)*100;
-        setUS30Pct(pct);
-      }
+      const last=meta.regularMarketPrice, prev=meta.chartPreviousClose;
+      if(last&&prev){ setUS30Pct(((last-prev)/prev)*100); }
     }
   }catch(e){}
 }
-fetchUS30();
-setInterval(fetchUS30, 60000);
+fetchUS30(); setInterval(fetchUS30, 60000);
 
-// ===== LIST RENDER (uses this week subset) =====
-function renderList(items){
-  const list = document.getElementById('list');
-  const note = document.getElementById('note');
-  const err  = document.getElementById('err');
-
-  // subset: only current week for the list view (keeps your original vibe)
-  const now = new Date();
-  const monday = new Date(now); const dow = now.getDay(); monday.setDate(now.getDate() - (dow===0?6:dow-1)); monday.setHours(0,0,0,0);
-  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6); sunday.setHours(23,59,59,999);
-
-  const inWeek = items.filter(e=>{
-    const d = new Date(e.datetime);
-    return !isNaN(d) && d>=monday && d<=sunday;
-  }).sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
-
-  list.innerHTML = '';
-  const tpl = document.getElementById('row');
-  const todayISO = fmtYMD(new Date());
-  let todays = 0;
-
-  for (const e of inWeek){
-    const li = tpl.content.firstElementChild.cloneNode(true);
-
-    const dstr = e.datetime || "";
-    let isToday = dstr.startsWith(todayISO);
-    if (!isToday){
-      const dt = new Date(dstr);
-      if (!isNaN(dt)) isToday = fmtYMD(dt) === todayISO;
-    }
-    if (isToday){ li.classList.add('today'); todays++; }
-
-    li.querySelector('.title').textContent = e.title;
-    const badges = li.querySelector('.badges');
-    const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-    const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-    if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
-
-    const dtTry = new Date(dstr);
-    const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
-    li.querySelector('.when').textContent = whenText;
-    li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
-
+/* ========= RENDER LIST ========= */
+function renderList(all){
+  const list=document.getElementById('list'), note=document.getElementById('note'), err=document.getElementById('err');
+  const now=new Date(); const dow=now.getDay();
+  const mon=new Date(now); mon.setDate(now.getDate()-(dow===0?6:dow-1)); mon.setHours(0,0,0,0);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
+  const items=all.filter(e=>{const d=new Date(e.datetime);return !isNaN(d)&&d>=mon&&d<=sun}).sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+  list.innerHTML=''; const tpl=document.getElementById('row'); const todayISO=fmtYMD(new Date()); let todays=0;
+  for(const e of items){
+    const li=tpl.content.firstElementChild.cloneNode(true);
+    const dstr=e.datetime||""; let isToday=dstr.startsWith(todayISO);
+    if(!isToday){const dt=new Date(dstr); if(!isNaN(dt)) isToday=fmtYMD(dt)===todayISO;}
+    if(isToday){li.classList.add('today'); todays++;}
+    li.querySelector('.title').textContent=e.title;
+    const badges=li.querySelector('.badges'); badges.innerHTML='<span class="badge">USD</span><span class="badge high">High</span>'+ (isToday?'<span class="badge today">Today</span>':'');
+    const dtTry=new Date(dstr);
+    li.querySelector('.when').textContent=isNaN(dtTry)?dstr:`${monthDay(dtTry)} at ${hhmm(dtTry)}`;
+    li.querySelector('.meta').textContent=e.actual?`Impact: High · ${e.actual}`:'Impact: High';
     list.appendChild(li);
   }
-
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
-  err.hidden = inWeek.length !== 0;
-  if(inWeek.length === 0) err.textContent = 'No USD high-impact events found for this week.';
+  note.textContent=`Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+  err.hidden=items.length!==0; if(items.length===0) err.textContent='No USD high-impact events found for this week.';
 }
 
-// ===== CALENDAR RENDER (uses full month) =====
-function calStartOfWeekMon(d){
-  const x=new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dow=x.getDay(); const diff=(dow===0? -6 : 1-dow); x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x;
-}
-function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
-function groupByDay(items){
-  const map={};
-  for(const e of items){
-    const dt=new Date(e.datetime); const key=isNaN(dt)?(e.datetime||"").slice(0,10):fmtYMD(dt);
-    if(!key) continue; (map[key] ||= []).push(e);
-  }
-  return map;
-}
-function renderCalendar(items){
-  const now = new Date();
-  const first = monthStart(now);
-  const last  = monthEnd(now);
-  const start = calStartOfWeekMon(first);
-  // end grid on the Sunday of the last week in month (Mon start -> 6 more days)
-  const end = addDays(calStartOfWeekMon(addDays(last,6)), 6);
-
-  const byDay = groupByDay(items);
-  const todayKey = fmtYMD(new Date());
-
-  const calGrid = document.getElementById('calGrid');
-  const calTitle= document.getElementById('calTitle');
-  const dayDetail = document.getElementById('dayDetail');
-  const dayDetailTitle = document.getElementById('dayDetailTitle');
-  const dayDetailList  = document.getElementById('dayDetailList');
-
-  calGrid.innerHTML = '';
-  calTitle.textContent = now.toLocaleDateString([], {month:'long', year:'numeric'});
-
-  // DOW headers
-  const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  for (const dname of dows){
-    const h = document.createElement('div'); h.className='cal-dow'; h.textContent=dname; calGrid.appendChild(h);
-  }
-
-  // cells
-  for(let d=start; d<=end; d=addDays(d,1)){
-    const key=fmtYMD(d);
-    const inMonth = (d.getMonth()===now.getMonth());
-    const evs = byDay[key] || [];
-
-    const cell = document.createElement('div');
-    cell.className = 'cal-cell' + (inMonth ? '' : ' out') + (key===todayKey ? ' today':'');
-    cell.dataset.key = key;
-
-    const dd = document.createElement('div'); dd.className='cal-date'; dd.textContent=d.getDate(); cell.appendChild(dd);
-
-    if (evs.length){
-      const dot=document.createElement('div'); dot.className='cal-dot'; dot.textContent = (evs.length===1?'• 1':'• '+evs.length);
-      cell.appendChild(dot);
-    }
-
+/* ========= RENDER CAL ========= */
+function renderCalendar(all){
+  const now=new Date(); const first=monthStart(now); const last=monthEnd(now);
+  const gridStart=startMon(first); const gridEnd=addDays(startMon(addDays(last,6)),6);
+  const monthItems=all.filter(e=>{const d=new Date(e.datetime);return !isNaN(d)&&d>=first&&d<=last});
+  const byDay={}; for(const e of monthItems){const k=(new Date(e.datetime)).toISOString().slice(0,10); (byDay[k]??=[]).push(e)}
+  const todayKey=fmtYMD(new Date());
+  const calGrid=document.getElementById('calGrid'), calTitle=document.getElementById('calTitle'), dayDetail=document.getElementById('dayDetail'), dayTitle=document.getElementById('dayDetailTitle'), dayList=document.getElementById('dayDetailList');
+  calGrid.innerHTML=''; calTitle.textContent=now.toLocaleDateString([], {month:'long', year:'numeric'});
+  for(const dName of ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']){const h=document.createElement('div');h.className='cal-dow';h.textContent=dName;calGrid.appendChild(h);}
+  for(let d=gridStart; d<=gridEnd; d=addDays(d,1)){
+    const key=fmtYMD(d); const inMonth=(d.getMonth()===now.getMonth()); const evs=byDay[key]||[];
+    const cell=document.createElement('div'); cell.className='cal-cell'+(inMonth?'':' out')+(key===todayKey?' today':''); cell.dataset.key=key;
+    const dd=document.createElement('div'); dd.className='cal-date'; dd.textContent=d.getDate(); cell.appendChild(dd);
+    if(evs.length){const dot=document.createElement('div'); dot.className='cal-dot'; dot.textContent='• '+evs.length; cell.appendChild(dot);}
     cell.addEventListener('click', ()=>{
       dayDetail.style.display='block';
-      const dt = new Date(key);
-      dayDetailTitle.textContent = isNaN(dt) ? key : dt.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
-      dayDetailList.innerHTML='';
-      (byDay[key]||[]).sort((a,b)=> new Date(a.datetime)-new Date(b.datetime)).forEach(e=>{
-        const li = document.createElement('li');
-        const t = new Date(e.datetime);
-        const time = isNaN(t)? e.datetime : hhmm(t);
-        li.innerHTML = `<strong>${e.title}</strong> <span class="day-time">${time}</span>`;
-        dayDetailList.appendChild(li);
+      dayTitle.textContent=d.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
+      dayList.innerHTML='';
+      evs.sort((a,b)=>new Date(a.datetime)-new Date(b.datetime)).forEach(e=>{
+        const t=new Date(e.datetime); const time=isNaN(t)?e.datetime:hhmm(t);
+        const li=document.createElement('li'); li.innerHTML=`<strong>${e.title}</strong> <span class="day-time">${time}</span>`; dayList.appendChild(li);
       });
     });
-
     calGrid.appendChild(cell);
   }
 }
 
-// ===== tabs =====
-const tabList = document.getElementById('tabList');
-const tabCal  = document.getElementById('tabCal');
-const viewList= document.getElementById('viewList');
-const viewCal = document.getElementById('viewCal');
-function setTab(which){
-  if (which==='list'){ tabList.classList.add('active'); tabCal.classList.remove('active'); viewList.style.display=''; viewCal.style.display='none'; }
-  else{ tabCal.classList.add('active'); tabList.classList.remove('active'); viewCal.style.display=''; viewList.style.display='none'; }
-}
-tabList.onclick = ()=> setTab('list');
-tabCal.onclick  = ()=> setTab('cal');
+/* ========= TABS ========= */
+const tabList=document.getElementById('tabList'), tabCal=document.getElementById('tabCal'), viewList=document.getElementById('viewList'), viewCal=document.getElementById('viewCal');
+function setTab(which){ if(which==='list'){tabList.classList.add('active');tabCal.classList.remove('active');viewList.style.display='';viewCal.style.display='none'} else {tabCal.classList.add('active');tabList.classList.remove('active');viewCal.style.display='';viewList.style.display='none'} }
+tabList.onclick=()=>setTab('list'); tabCal.onclick=()=>setTab('cal');
 
-// ===== main fetch: merge prev/this/next week, then filter to current month =====
-document.getElementById('now').textContent =
-  new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+/* ========= BOOT ========= */
+document.getElementById('now').textContent=new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
 (async function(){
-  const note = document.getElementById('note');
-  const now = new Date();
-  const mStart = monthStart(now);
-  const mEnd   = monthEnd(now);
+  const note=document.getElementById('note');
 
-  // try worker ROOT first (if you left it returning JSON); else pull XML weeks via proxy
-  let items = null;
-
+  let items=[];
   try{
-    const resp = await fetch(WORKER, {cache:'no-store'});
-    if (resp.ok){
-      const payload = await resp.json();
-      if (payload?.items?.length) items = payload.items;
-    }
-  }catch(_){}
-
-  if (!items){
-    try{
-      const urls = [
-        `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_prevweek.xml")}`,
-        `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
-        `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.xml")}`,
-      ];
-      const xmlPrev = await fetchTextWithRetry([urls[0]], 2);
-      const xmlThis = await fetchTextWithRetry([urls[1]], 2);
-      const xmlNext = await fetchTextWithRetry([urls[2]], 2);
-      const parsed = [
-        ...parseXML(xmlPrev),
-        ...parseXML(xmlThis),
-        ...parseXML(xmlNext),
-      ];
-      items = dedupe(parsed);
-    }catch(_){}
+    const r=await fetch(WORKER, {cache:'no-store'});
+    const payload=await r.json();
+    if(!payload.ok) throw new Error(payload.error||'Worker error');
+    items=payload.items||[];
+  }catch(e){
+    note.textContent='Could not load from proxy: '+(e.message||e);
+    return;
   }
 
-  if (!items || !items.length){
-    const c = loadCache();
-    if (c?.items?.length) items = c.items;
-    else items = SEED_ITEMS;
-  }
-
-  // Filter to current month (inclusive)
-  const monthItems = items.filter(e=>{
-    const d = new Date(e.datetime);
-    return !isNaN(d) && d>=mStart && d<=mEnd;
-  }).sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
-
-  // Save cache of month set
-  saveCache(monthItems);
-
-  // Render
-  renderList(monthItems);
-  renderCalendar(monthItems);
-
-  note.textContent = `Loaded ${monthItems.length} high-impact USD events for ${now.toLocaleDateString([], {month:'long', year:'numeric'})}.`;
-  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+  renderList(items);
+  renderCalendar(items);
+  note.textContent=`Loaded ${items.length} USD high-impact events.`;
+  document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
 })();
 </script>
 </body>
