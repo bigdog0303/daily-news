@@ -5,41 +5,135 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>High-impact USD — This Week</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0}
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #0c0c0e;
+  color-scheme: dark;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  background: #0c0c0e;
+}
+
+*{box-sizing:border-box}
 :root{
   --bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
   --panel:#121316; --panel2:#17181c; --ring:#2a2b31;
   --badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
   --accent-ring:#5a4b13; --high:#c63b3b;
 }
-body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text)}
-.top{padding:18px 16px 10px;border-bottom:1px solid var(--ring);
-  background:linear-gradient(180deg,rgba(0,0,0,.45),rgba(0,0,0,0))}
-h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800}
-h1 .muted{color:#b9bac2;font-weight:700}
-.small{color:var(--muted);font-size:12px}
-main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
-.note{display:flex;align-items:center;justify-content:center;min-height:48px;
-  margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);
-  border:1px solid var(--ring);color:#c9cad1;font-weight:600}
-ul{list-style:none;margin:0;padding:0}
-.item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);
-  margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
-.left{width:8px;background:var(--ring)}
-.content{flex:1;padding:18px 18px 16px}
-.title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
-.badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
-  background:var(--badge);border:1px solid var(--ring);font-size:12px;color:#d7d7dc}
-.badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
-.badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
-.when,.meta{font-size:14px;color:var(--muted)}
-.when{margin-bottom:6px}
-.item.today{background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
-  outline:1px solid var(--accent-ring)}
-.item.today .left{background:var(--accent)}
-.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
-.err{color:#ff9b9b;margin-top:8px;text-align:center}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* --- header --- */
+header.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 18px 16px 10px;
+  border-bottom: 1px solid var(--ring);
+  background: var(--bg);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05);
+}
+h1 {
+  margin: 0 0 2px;
+  font-size: 28px;
+  letter-spacing: .2px;
+  font-weight: 800;
+}
+h1 .muted {
+  color: #b9bac2;
+  font-weight: 700;
+}
+.small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* --- content --- */
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 14px 12px 40px;
+}
+.note {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:48px;
+  margin:14px 0 12px;
+  padding:10px 14px;
+  border-radius:14px;
+  background:var(--panel2);
+  border:1px solid var(--ring);
+  color:#c9cad1;
+  font-weight:600;
+}
+ul {list-style:none;margin:0;padding:0}
+.item {
+  display:flex;
+  border-radius:22px;
+  background:var(--panel2);
+  border:1px solid var(--ring);
+  margin:16px 0;
+  overflow:hidden;
+  box-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+.left {width:8px;background:var(--ring)}
+.content {flex:1;padding:18px 18px 16px}
+.title {margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
+.badges {display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+.badge {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px;
+  border-radius:999px;
+  background:var(--badge);
+  border:1px solid var(--ring);
+  font-size:12px;
+  color:#d7d7dc;
+}
+.badge.high::before {
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:var(--high);
+}
+.badge.today {
+  border-color:var(--accent);
+  background:var(--accent-ink);
+  color:#ffe899;
+}
+.when, .meta {
+  font-size:14px;
+  color:var(--muted);
+}
+.when {margin-bottom:6px}
+.item.today {
+  background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
+  outline:1px solid var(--accent-ring);
+}
+.item.today .left {background:var(--accent)}
+.footer {
+  margin-top:22px;
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;
+}
+.err {
+  color:#ff9b9b;
+  margin-top:8px;
+  text-align:center;
+}
 </style>
 </head>
 <body>
@@ -70,7 +164,6 @@ ul{list-style:none;margin:0;padding:0}
 
 <script>
 const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev';
-
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 
 async function fetchWithRetry(url, tries=4){
@@ -81,7 +174,7 @@ async function fetchWithRetry(url, tries=4){
       if(r.ok) return await r.json();
       lastErr = new Error('HTTP '+r.status);
     }catch(e){ lastErr = e; }
-    await sleep(600 * (i+1)); // 0.6s, 1.2s, 1.8s…
+    await sleep(600 * (i+1));
   }
   throw lastErr;
 }
