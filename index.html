@@ -2,19 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>High-impact USD — This Week</title>
+
+<!-- Make iOS/Safari paint dark behind the status bar -->
+<meta name="theme-color" content="#0c0c0e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
 <style>
+/* Fill the entire screen, including the iOS safe area, with dark bg */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background-color: #0c0c0e;
-  color-scheme: dark;
-  -webkit-touch-callout: none;
-  -webkit-text-size-adjust: 100%;
-  -webkit-font-smoothing: antialiased;
   background: #0c0c0e;
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* This fixed bar paints the notch/status area black on iOS */
+.statusbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0);
+  height: constant(safe-area-inset-top, 0);
+  background: #0c0c0e;
+  z-index: 9999;
+  pointer-events: none;
 }
 
 *{box-sizing:border-box}
@@ -32,15 +48,11 @@ body {
   overflow-x: hidden;
 }
 
-/* --- header --- */
+/* --- header (non-sticky so it never covers content) --- */
 header.top {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  padding: 18px 16px 10px;
+  padding: calc(8px + env(safe-area-inset-top, 0)) 16px 10px;
   border-bottom: 1px solid var(--ring);
   background: var(--bg);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.05);
 }
 h1 {
   margin: 0 0 2px;
@@ -48,95 +60,46 @@ h1 {
   letter-spacing: .2px;
   font-weight: 800;
 }
-h1 .muted {
-  color: #b9bac2;
-  font-weight: 700;
-}
-.small {
-  color: var(--muted);
-  font-size: 12px;
-}
+h1 .muted { color: #b9bac2; font-weight: 700; }
+.small { color: var(--muted); font-size: 12px }
 
 /* --- content --- */
-main {
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 14px 12px 40px;
-}
+main { max-width: 880px; margin: 0 auto; padding: 14px 12px 40px }
 .note {
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:48px;
-  margin:14px 0 12px;
-  padding:10px 14px;
-  border-radius:14px;
-  background:var(--panel2);
-  border:1px solid var(--ring);
-  color:#c9cad1;
-  font-weight:600;
+  display:flex; align-items:center; justify-content:center; min-height:48px;
+  margin:14px 0 12px; padding:10px 14px; border-radius:14px;
+  background:var(--panel2); border:1px solid var(--ring); color:#c9cad1; font-weight:600;
 }
-ul {list-style:none;margin:0;padding:0}
+ul { list-style:none; margin:0; padding:0 }
 .item {
-  display:flex;
-  border-radius:22px;
-  background:var(--panel2);
-  border:1px solid var(--ring);
-  margin:16px 0;
-  overflow:hidden;
-  box-shadow:0 1px 0 rgba(0,0,0,.35);
+  display:flex; border-radius:22px; background:var(--panel2); border:1px solid var(--ring);
+  margin:16px 0; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.35);
 }
-.left {width:8px;background:var(--ring)}
-.content {flex:1;padding:18px 18px 16px}
-.title {margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
-.badges {display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+.left { width:8px; background:var(--ring) }
+.content { flex:1; padding:18px 18px 16px }
+.title { margin:0 0 10px; font-size:22px; font-weight:800; letter-spacing:.2px }
+.badges { display:flex; gap:10px; flex-wrap:wrap; margin:-2px 0 10px }
 .badge {
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 12px;
-  border-radius:999px;
-  background:var(--badge);
-  border:1px solid var(--ring);
-  font-size:12px;
-  color:#d7d7dc;
+  display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
+  background:var(--badge); border:1px solid var(--ring); font-size:12px; color:#d7d7dc;
 }
-.badge.high::before {
-  content:"";
-  width:8px;
-  height:8px;
-  border-radius:50%;
-  background:var(--high);
-}
-.badge.today {
-  border-color:var(--accent);
-  background:var(--accent-ink);
-  color:#ffe899;
-}
-.when, .meta {
-  font-size:14px;
-  color:var(--muted);
-}
-.when {margin-bottom:6px}
+.badge.high::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--high) }
+.badge.today { border-color:var(--accent); background:var(--accent-ink); color:#ffe899 }
+.when, .meta { font-size:14px; color:var(--muted) }
+.when { margin-bottom:6px }
 .item.today {
   background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
   outline:1px solid var(--accent-ring);
 }
-.item.today .left {background:var(--accent)}
-.footer {
-  margin-top:22px;
-  text-align:center;
-  color:var(--muted);
-  font-size:12px;
-}
-.err {
-  color:#ff9b9b;
-  margin-top:8px;
-  text-align:center;
-}
+.item.today .left { background:var(--accent) }
+.footer { margin-top:22px; text-align:center; color:var(--muted); font-size:12px }
+.err { color:#ff9b9b; margin-top:8px; text-align:center }
 </style>
 </head>
 <body>
+<!-- Paint the iOS safe-area (notch/status bar) dark -->
+<div class="statusbar" aria-hidden="true"></div>
+
 <header class="top">
   <div class="small" id="now"></div>
   <h1>High-impact USD events for this week. <span class="muted">Today’s events are highlighted.</span></h1>
@@ -164,8 +127,8 @@ ul {list-style:none;margin:0;padding:0}
 
 <script>
 const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev';
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 async function fetchWithRetry(url, tries=4){
   let lastErr;
   for(let i=0;i<tries;i++){
