@@ -44,7 +44,6 @@ h1 {
 .small { color: var(--muted); font-size: 12px }
 
 /* --- Heatbar styles --- */
-/* --- Heatbar styles (always inline, better spacing) --- */
 .heatmini {
   display:inline-flex;
   align-items:center;
@@ -184,6 +183,13 @@ function setUS30Pct(pct){
   fill.style.width = w.toFixed(2) + '%';
   val.textContent = (pct>=0?'+':'') + pct.toFixed(2) + '%';
 }
+
+function setUS30From(last, prevClose){
+  if(!isFinite(last) || !isFinite(prevClose) || prevClose === 0) return;
+  const pct = ((last - prevClose) / prevClose) * 100;
+  setUS30Pct(pct);
+}
+
 // ---- Live US30 price updater ----
 async function fetchUS30Live(){
   try {
@@ -208,24 +214,8 @@ async function fetchUS30Live(){
 // Update once on load + repeat every 60s
 fetchUS30Live();
 setInterval(fetchUS30Live, 60000);
-function setUS30From(last, prevClose){
-  if(!isFinite(last) || !isFinite(prevClose) || prevClose === 0) return;
-  const pct = ((last - prevClose) / prevClose) * 100;
-  setUS30Pct(pct);
-}
 
-// quick demo via ?us30=0.42
-(function(){
-  const p = new URLSearchParams(location.search);
-  if(p.has('us30')){
-    const v = parseFloat(p.get('us30'));
-    if(isFinite(v)) setUS30Pct(v);
-  } else {
-    setUS30Pct(0);
-  }
-})();
-
-// ---- main feed ----
+// ---- Main news feed ----
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 async function fetchWithRetry(url, tries=4){
   let lastErr;
