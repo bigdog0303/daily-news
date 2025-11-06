@@ -40,7 +40,7 @@ ul{list-style:none;margin:0;padding:0}
 .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
 .err{color:#ff9b9b;margin-top:8px;text-align:center}
 
-/* --- heatbar styles --- */
+/* --- heatbar --- */
 .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
 .heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
@@ -88,11 +88,30 @@ ul{list-style:none;margin:0;padding:0}
 </template>
 
 <script>
-// ---------- CONFIG ----------
+// ===== CONFIG =====
 const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev";
+const CACHE_KEY = "ff_usd_high_cache_v1";
+const CACHE_MAX_DAYS = 7;
 
-// ---------- helpers ----------
+// ===== helpers =====
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+function saveCache(items){
+  try{
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items}));
+  }catch{}
+}
+function loadCache(){
+  try{
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || !Array.isArray(obj.items)) return null;
+    const ageDays = (Date.now() - (obj.ts||0)) / 86400000;
+    if(ageDays > CACHE_MAX_DAYS) return null;
+    return obj;
+  }catch{ return null; }
+}
+
 async function fetchTextWithRetry(urls, tries=3){
   let lastErr;
   for (const url of urls){
@@ -107,6 +126,7 @@ async function fetchTextWithRetry(urls, tries=3){
   }
   throw lastErr;
 }
+
 function parseFF(xml){
   // tolerant XML parse
   const blocks = [...xml.matchAll(/<event>([\s\S]*?)<\/event>/gi)];
@@ -124,20 +144,21 @@ function parseFF(xml){
       actual: pick(b,'actual')
     };
   });
-  // Filter: USD + any case variant of "High"
+  // Filter: USD + "high" (case-insensitive)
   return items.filter(e =>
     (e.currency || '').toUpperCase() === 'USD' &&
     /high/i.test(e.impact || '')
   );
 }
+
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-// ---------- UI init ----------
+// ===== UI init =====
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
-// ---------- US30 mini heatbar ----------
+// ===== US30 mini heatbar =====
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -169,12 +190,57 @@ async function fetchUS30(){
 fetchUS30();
 setInterval(fetchUS30, 60000);
 
-// ---------- ForexFactory via proxy (XML -> JSON in browser) ----------
+// ===== render helpers =====
+function renderItems(items, {cached=false}={}){
+  const list = document.getElementById('list');
+  const note = document.getElementById('note');
+  const err  = document.getElementById('err');
+
+  list.innerHTML = '';
+  const tpl = document.getElementById('row');
+  const todayKey = new Date().toISOString().slice(0,10);
+  let todays = 0;
+
+  for (const e of items){
+    const dt = new Date(e.datetime);
+    if (isNaN(dt)) continue;
+
+    const li = tpl.content.firstElementChild.cloneNode(true);
+    const isToday = (dt.toISOString().slice(0,10) === todayKey);
+    if (isToday){ li.classList.add('today'); todays++; }
+
+    li.querySelector('.title').textContent = e.title;
+    const badges = li.querySelector('.badges');
+    const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+    const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+    if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+
+    li.querySelector('.when').textContent = `${monthDay(dt)} at ${hhmm(dt)}`;
+    li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+    list.appendChild(li);
+  }
+
+  const cachedText = cached ? ' (cached)' : '';
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).${cachedText}`;
+  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+  err.hidden = items.length !== 0;
+  if(items.length === 0) err.textContent = 'No USD high-impact events found.';
+}
+
+// ===== main =====
 (async function(){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   const err  = document.getElementById('err');
 
+  // 1) Try to show cached immediately (better UX)
+  const cached = loadCache();
+  if (cached && Array.isArray(cached.items) && cached.items.length){
+    renderItems(cached.items, {cached:true});
+  }
+
+  // 2) Fetch fresh from mirrors via proxy
   try{
     const ffUrls = [
       `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
@@ -184,40 +250,22 @@ setInterval(fetchUS30, 60000);
     const xml = await fetchTextWithRetry(ffUrls, 2);
     const items = parseFF(xml);
 
-    list.innerHTML = '';
-    const tpl = document.getElementById('row');
-    const todayKey = new Date().toISOString().slice(0,10);
-    let todays = 0;
-
-    for (const e of items){
-      const dt = new Date(e.datetime);
-      if (isNaN(dt)) continue;
-
-      const li = tpl.content.firstElementChild.cloneNode(true);
-      const isToday = (dt.toISOString().slice(0,10) === todayKey);
-      if (isToday){ li.classList.add('today'); todays++; }
-
-      li.querySelector('.title').textContent = e.title;
-      const badges = li.querySelector('.badges');
-      const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-      const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-      if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
-
-      li.querySelector('.when').textContent = `${monthDay(dt)} at ${hhmm(dt)}`;
-      li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
-      list.appendChild(li);
+    if (items.length){
+      saveCache(items);
+      renderItems(items, {cached:false});
+    } else if (!cached){
+      // nothing fresh and no cache shown yet
+      list.innerHTML = '';
+      note.textContent = 'Showing 0 high-impact USD events today (highlighted).';
+      err.hidden = false;
+      err.textContent = 'No USD high-impact events found.';
     }
-
-    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
-    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-
-    err.hidden = items.length !== 0;
-    if(items.length === 0) err.textContent = 'No USD high-impact events found.';
-
   }catch(e){
-    note.textContent = '';
-    err.hidden = false;
-    err.textContent = 'Could not load from proxy: ' + (e.message || e);
+    if (!cached){
+      note.textContent = '';
+      err.hidden = false;
+      err.textContent = 'Could not load from proxy: ' + (e.message || e);
+    }
     console.error(e);
   }
 })();
