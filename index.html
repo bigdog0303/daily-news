@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>High-impact USD — This Week</title>
+<title>High-impact USD — This Month</title>
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -112,9 +112,7 @@ ul{list-style:none;margin:0;padding:0}
         <div class="cal-title" id="calTitle">Month YYYY</div>
         <div class="small" id="calHint">Tap a day to see events</div>
       </div>
-      <div class="cal-grid" id="calGrid">
-        <!-- DOW headers inserted in JS -->
-      </div>
+      <div class="cal-grid" id="calGrid"></div>
       <div class="day-detail" id="dayDetail" style="display:none">
         <h3 id="dayDetailTitle">Day details</h3>
         <ul class="day-list" id="dayDetailList"></ul>
@@ -138,9 +136,9 @@ ul{list-style:none;margin:0;padding:0}
 <script>
 // ===== CONFIG =====
 const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev"; // exact
-const CACHE_KEY = "ff_usd_high_cache_final";
+const CACHE_KEY = "ff_usd_high_cache_month_v1";
 
-// Seed items (fallback so it never goes blank)
+// Seed (just in case nothing returns)
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -149,11 +147,43 @@ const SEED_ITEMS = [
 
 // ===== helpers =====
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
-function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
+function monthStart(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function monthEnd(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0, 23,59,59,999); }
+function fmtYMD(d){ return d.toISOString().slice(0,10); }
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
-function fmtYMD(d){ return d.toISOString().slice(0,10); }
+function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
+function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
+
+async function fetchText(url){ const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }
+async function fetchTextWithRetry(urls, tries=2){
+  let lastErr;
+  for(const u of urls){
+    for(let i=0;i<tries;i++){
+      try{ return await fetchText(u); }catch(e){ lastErr=e; await sleep(400*(i+1)); }
+    }
+  }
+  throw lastErr;
+}
+function parseXML(xmlString){
+  const doc = new DOMParser().parseFromString(xmlString, "text/xml");
+  const events = Array.from(doc.getElementsByTagName("event")).map(ev => ({
+    title: (ev.getElementsByTagName("title")[0]?.textContent||"").trim(),
+    datetime: (ev.getElementsByTagName("date")[0]?.textContent||"").trim(),
+    impact: (ev.getElementsByTagName("impact")[0]?.textContent||"").trim(),
+    currency: (ev.getElementsByTagName("currency")[0]?.textContent||"").trim(),
+    actual: (ev.getElementsByTagName("actual")[0]?.textContent||"").trim(),
+  }));
+  return events.filter(e => (e.currency||"").toUpperCase()==="USD" && /high/i.test(e.impact||""));
+}
+function dedupe(items){
+  const map=new Map();
+  for(const e of items){
+    const key = (e.title||"").toLowerCase()+"|"+(e.datetime||"");
+    if(!map.has(key)) map.set(key,e);
+  }
+  return [...map.values()];
+}
 
 // ===== US30 mini heatbar (via proxy ?url=) =====
 function setUS30Pct(pct){
@@ -187,18 +217,28 @@ async function fetchUS30(){
 fetchUS30();
 setInterval(fetchUS30, 60000);
 
-// ===== render: LIST =====
+// ===== LIST RENDER (uses this week subset) =====
 function renderList(items){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   const err  = document.getElementById('err');
+
+  // subset: only current week for the list view (keeps your original vibe)
+  const now = new Date();
+  const monday = new Date(now); const dow = now.getDay(); monday.setDate(now.getDate() - (dow===0?6:dow-1)); monday.setHours(0,0,0,0);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6); sunday.setHours(23,59,59,999);
+
+  const inWeek = items.filter(e=>{
+    const d = new Date(e.datetime);
+    return !isNaN(d) && d>=monday && d<=sunday;
+  }).sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
 
   list.innerHTML = '';
   const tpl = document.getElementById('row');
   const todayISO = fmtYMD(new Date());
   let todays = 0;
 
-  for (const e of items){
+  for (const e of inWeek){
     const li = tpl.content.firstElementChild.cloneNode(true);
 
     const dstr = e.datetime || "";
@@ -224,45 +264,31 @@ function renderList(items){
   }
 
   note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
-  err.hidden = items.length !== 0;
-  if(items.length === 0) err.textContent = 'No USD high-impact events found.';
+  err.hidden = inWeek.length !== 0;
+  if(inWeek.length === 0) err.textContent = 'No USD high-impact events found for this week.';
 }
 
-// ===== calendar utils =====
-function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
-function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
-function startOfWeekMon(d){
+// ===== CALENDAR RENDER (uses full month) =====
+function calStartOfWeekMon(d){
   const x=new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dow=x.getDay(); // Sun=0..Sat=6
-  const diff = (dow===0 ? -6 : 1 - dow);
-  x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x;
+  const dow=x.getDay(); const diff=(dow===0? -6 : 1-dow); x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x;
 }
-
-// Group items by day string YYYY-MM-DD
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
 function groupByDay(items){
-  const map = {};
-  for (const e of items){
-    const dt = new Date(e.datetime);
-    const key = isNaN(dt) ? (e.datetime||"").slice(0,10) : fmtYMD(dt);
-    if (!key) continue;
-    (map[key] ||= []).push(e);
+  const map={};
+  for(const e of items){
+    const dt=new Date(e.datetime); const key=isNaN(dt)?(e.datetime||"").slice(0,10):fmtYMD(dt);
+    if(!key) continue; (map[key] ||= []).push(e);
   }
   return map;
 }
-
-// ===== render: CALENDAR =====
 function renderCalendar(items){
   const now = new Date();
-  const first = startOfMonth(now);
-  const last  = endOfMonth(now);
-  const gridStart = startOfWeekMon(first);
-  const gridCells = [];
-  let d = new Date(gridStart);
-  while (d <= addDays(last, (7 - ((last.getDay()+6)%7) -1))) { // complete last week to Sunday
-    gridCells.push(new Date(d));
-    d = addDays(d, 1);
-  }
+  const first = monthStart(now);
+  const last  = monthEnd(now);
+  const start = calStartOfWeekMon(first);
+  // end grid on the Sunday of the last week in month (Mon start -> 6 more days)
+  const end = addDays(calStartOfWeekMon(addDays(last,6)), 6);
 
   const byDay = groupByDay(items);
   const todayKey = fmtYMD(new Date());
@@ -279,44 +305,35 @@ function renderCalendar(items){
   // DOW headers
   const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   for (const dname of dows){
-    const h = document.createElement('div');
-    h.className='cal-dow';
-    h.textContent = dname;
-    calGrid.appendChild(h);
+    const h = document.createElement('div'); h.className='cal-dow'; h.textContent=dname; calGrid.appendChild(h);
   }
 
-  // Cells
-  for (const day of gridCells){
-    const key = fmtYMD(day);
-    const inMonth = (day.getMonth() === now.getMonth());
+  // cells
+  for(let d=start; d<=end; d=addDays(d,1)){
+    const key=fmtYMD(d);
+    const inMonth = (d.getMonth()===now.getMonth());
     const evs = byDay[key] || [];
 
     const cell = document.createElement('div');
     cell.className = 'cal-cell' + (inMonth ? '' : ' out') + (key===todayKey ? ' today':'');
     cell.dataset.key = key;
 
-    const dd = document.createElement('div');
-    dd.className='cal-date';
-    dd.textContent = day.getDate();
-    cell.appendChild(dd);
+    const dd = document.createElement('div'); dd.className='cal-date'; dd.textContent=d.getDate(); cell.appendChild(dd);
 
     if (evs.length){
-      const dot = document.createElement('div');
-      dot.className='cal-dot';
-      dot.textContent = (evs.length===1?'• 1':'• '+evs.length);
+      const dot=document.createElement('div'); dot.className='cal-dot'; dot.textContent = (evs.length===1?'• 1':'• '+evs.length);
       cell.appendChild(dot);
     }
 
     cell.addEventListener('click', ()=>{
-      // open details for this day
-      dayDetail.style.display = 'block';
+      dayDetail.style.display='block';
       const dt = new Date(key);
       dayDetailTitle.textContent = isNaN(dt) ? key : dt.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
-      dayDetailList.innerHTML = '';
-
-      (byDay[key]||[]).forEach(e=>{
+      dayDetailList.innerHTML='';
+      (byDay[key]||[]).sort((a,b)=> new Date(a.datetime)-new Date(b.datetime)).forEach(e=>{
         const li = document.createElement('li');
-        const time = (()=>{ const t=new Date(e.datetime); return isNaN(t)? e.datetime : `${hhmm(t)}`; })();
+        const t = new Date(e.datetime);
+        const time = isNaN(t)? e.datetime : hhmm(t);
         li.innerHTML = `<strong>${e.title}</strong> <span class="day-time">${time}</span>`;
         dayDetailList.appendChild(li);
       });
@@ -332,52 +349,72 @@ const tabCal  = document.getElementById('tabCal');
 const viewList= document.getElementById('viewList');
 const viewCal = document.getElementById('viewCal');
 function setTab(which){
-  if (which==='list'){
-    tabList.classList.add('active'); tabCal.classList.remove('active');
-    viewList.style.display=''; viewCal.style.display='none';
-  }else{
-    tabCal.classList.add('active'); tabList.classList.remove('active');
-    viewCal.style.display=''; viewList.style.display='none';
-  }
+  if (which==='list'){ tabList.classList.add('active'); tabCal.classList.remove('active'); viewList.style.display=''; viewCal.style.display='none'; }
+  else{ tabCal.classList.add('active'); tabList.classList.remove('active'); viewCal.style.display=''; viewList.style.display='none'; }
 }
 tabList.onclick = ()=> setTab('list');
 tabCal.onclick  = ()=> setTab('cal');
 
-// ===== main =====
+// ===== main fetch: merge prev/this/next week, then filter to current month =====
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
 (async function(){
   const note = document.getElementById('note');
-  let itemsUsed = null;
-  let staleLabel = '';
+  const now = new Date();
+  const mStart = monthStart(now);
+  const mEnd   = monthEnd(now);
 
-  // 1) Try Worker ROOT (server-side cached JSON)
+  // try worker ROOT first (if you left it returning JSON); else pull XML weeks via proxy
+  let items = null;
+
   try{
-    const r = await fetch(WORKER, {cache:'no-store'});
-    if (r.ok){
-      const payload = await r.json();
-      if (payload?.items?.length){
-        itemsUsed = payload.items;
-        saveCache(itemsUsed);
-        staleLabel = payload.stale ? ' (cached)' : '';
-      }
+    const resp = await fetch(WORKER, {cache:'no-store'});
+    if (resp.ok){
+      const payload = await resp.json();
+      if (payload?.items?.length) items = payload.items;
     }
   }catch(_){}
 
-  // 2) Fallback to local cache
-  if (!itemsUsed){
-    const c = loadCache();
-    if (c?.items?.length) { itemsUsed = c.items; staleLabel = ' (cached)'; }
+  if (!items){
+    try{
+      const urls = [
+        `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_prevweek.xml")}`,
+        `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
+        `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.xml")}`,
+      ];
+      const xmlPrev = await fetchTextWithRetry([urls[0]], 2);
+      const xmlThis = await fetchTextWithRetry([urls[1]], 2);
+      const xmlNext = await fetchTextWithRetry([urls[2]], 2);
+      const parsed = [
+        ...parseXML(xmlPrev),
+        ...parseXML(xmlThis),
+        ...parseXML(xmlNext),
+      ];
+      items = dedupe(parsed);
+    }catch(_){}
   }
 
-  // 3) Fallback to seed
-  if (!itemsUsed){ itemsUsed = SEED_ITEMS; staleLabel = ' (seed)'; }
+  if (!items || !items.length){
+    const c = loadCache();
+    if (c?.items?.length) items = c.items;
+    else items = SEED_ITEMS;
+  }
 
-  // Render both views
-  renderList(itemsUsed);
-  renderCalendar(itemsUsed);
-  note.textContent = `Events loaded${staleLabel}.`;
+  // Filter to current month (inclusive)
+  const monthItems = items.filter(e=>{
+    const d = new Date(e.datetime);
+    return !isNaN(d) && d>=mStart && d<=mEnd;
+  }).sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
+
+  // Save cache of month set
+  saveCache(monthItems);
+
+  // Render
+  renderList(monthItems);
+  renderCalendar(monthItems);
+
+  note.textContent = `Loaded ${monthItems.length} high-impact USD events for ${now.toLocaleDateString([], {month:'long', year:'numeric'})}.`;
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 })();
 </script>
