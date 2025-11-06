@@ -4,81 +4,110 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>High-impact USD — This Week</title>
+
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
 <style>
-html, body { margin:0; padding:0; height:100%; background:#0c0c0e; color-scheme:dark; -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100% }
-*{ box-sizing:border-box }
-:root{
-  --bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
-  --panel:#121316; --panel2:#17181c; --ring:#2a2b31;
-  --badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
-  --accent-ring:#5a4b13; --high:#c63b3b;
+html, body {
+margin: 0;
+padding: 0;
+height: 100%;
+background: #0c0c0e;
+color-scheme: dark;
+-webkit-font-smoothing: antialiased;
+-webkit-text-size-adjust: 100%;
 }
-body{ font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial; background:var(--bg); color:var(--text); overflow-x:hidden }
-.statusbar{ position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top,0); background:#0c0c0e; z-index:9999; pointer-events:none }
+.statusbar {
+position: fixed;
+top: 0; left: 0; right: 0;
+height: env(safe-area-inset-top, 0);
+height: constant(safe-area-inset-top, 0);
+background: #0c0c0e;
+z-index: 9999;
+pointer-events: none;
+}
 
-/* Top header + nav */
-header.top{ padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px; border-bottom:1px solid var(--ring); background:var(--bg) }
-h1{ margin:0 0 2px; font-size:28px; letter-spacing:.2px; font-weight:800 }
-h1 .muted{ color:#b9bac2; font-weight:700 }
-.small{ color:var(--muted); font-size:12px }
-
-.nav{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
-.tab{ appearance:none; border:1px solid var(--ring); background:var(--panel2); color:var(--text); padding:8px 12px; border-radius:999px; font-size:14px; text-decoration:none }
-.tab.active{ background:var(--accent); color:var(--accent-ink); border-color:transparent; font-weight:800 }
-
-main{ max-width:880px; margin:0 auto; padding:14px 12px 40px }
-.note{ display:flex; align-items:center; justify-content:center; min-height:48px; margin:14px 0 12px; padding:10px 14px; border-radius:14px; background:var(--panel2); border:1px solid var(--ring); color:#c9cad1; font-weight:600 }
-ul{ list-style:none; margin:0; padding:0 }
-.item{ display:flex; border-radius:22px; background:var(--panel2); border:1px solid var(--ring); margin:16px 0; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.35) }
-.left{ width:8px; background:var(--ring) }
-.content{ flex:1; padding:18px 18px 16px }
-.title{ margin:0 0 10px; font-size:22px; font-weight:800; letter-spacing:.2px }
-.badges{ display:flex; gap:10px; flex-wrap:wrap; margin:-2px 0 10px }
-.badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; background:var(--badge); border:1px solid var(--ring); font-size:12px; color:#d7d7dc }
-.badge.high::before{ content:""; width:8px; height:8px; border-radius:50%; background:var(--high) }
-.badge.today{ border-color:var(--accent); background:var(--accent-ink); color:#ffe899 }
-.when,.meta{ font-size:14px; color:var(--muted) }
-.when{ margin-bottom:6px }
-.item.today{ background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0)); outline:1px solid var(--accent-ring) }
-.item.today .left{ background:var(--accent) }
-.footer{ margin-top:22px; text-align:center; color:var(--muted); font-size:12px }
-.err{ color:#ff9b9b; margin-top:8px; text-align:center }
+- { box-sizing: border-box; }
+:root{
+--bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
+--panel:#121316; --panel2:#17181c; --ring:#2a2b31;
+--badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
+--accent-ring:#5a4b13; --high:#c63b3b;
+}
+body {
+font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+background: var(--bg);
+color: var(--text);
+overflow-x: hidden;
+}
+header.top {
+padding: calc(8px + env(safe-area-inset-top, 0)) 16px 10px;
+border-bottom: 1px solid var(--ring);
+background: var(--bg);
+}
+h1 { margin: 0 0 2px; font-size: 28px; letter-spacing: .2px; font-weight: 800; }
+h1 .muted { color: #b9bac2; font-weight: 700; }
+.small { color: var(--muted); font-size: 12px }
+main { max-width: 880px; margin: 0 auto; padding: 14px 12px 40px }
+.note {
+display:flex; align-items:center; justify-content:center; min-height:48px;
+margin:14px 0 12px; padding:10px 14px; border-radius:14px;
+background:var(--panel2); border:1px solid var(--ring); color:#c9cad1; font-weight:600;
+}
+ul { list-style:none; margin:0; padding:0 }
+.item {
+display:flex; border-radius:22px; background:var(--panel2); border:1px solid var(--ring);
+margin:16px 0; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+.left { width:8px; background:var(--ring) }
+.content { flex:1; padding:18px 18px 16px }
+.title { margin:0 0 10px; font-size:22px; font-weight:800; letter-spacing:.2px }
+.badges { display:flex; gap:10px; flex-wrap:wrap; margin:-2px 0 10px }
+.badge {
+display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
+background:var(--badge); border:1px solid var(--ring); font-size:12px; color:#d7d7dc;
+}
+.badge.high::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--high) }
+.badge.today { border-color:var(--accent); background:var(--accent-ink); color:#ffe899 }
+.when, .meta { font-size:14px; color:var(--muted) }
+.when { margin-bottom:6px }
+.item.today {
+background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
+outline:1px solid var(--accent-ring);
+}
+.item.today .left { background:var(--accent) }
+.footer { margin-top:22px; text-align:center; color:var(--muted); font-size:12px }
+.err { color:#ff9b9b; margin-top:8px; text-align:center }
 </style>
 </head>
 <body>
 <div class="statusbar" aria-hidden="true"></div>
 
 <header class="top">
-  <div class="small" id="now"></div>
-  <h1>High-impact USD events for this week. <span class="muted">Today’s events are highlighted.</span></h1>
-  <div class="nav">
-    <a class="tab active" href="index.html">Events</a>
-    <a class="tab" href="summary.html">AI Summary</a>
-    <a class="tab" href="headlines.html">Headlines</a>
-  </div>
-  <div class="small" id="updated"></div>
+<div class="small" id="now"></div>
+<h1>High-impact USD events for this week. <span class="muted">Today’s events are highlighted.</span></h1>
+<div class="small" id="updated"></div>
 </header>
 
 <main>
-  <div class="note" id="note">Loading…</div>
-  <ul id="list"></ul>
-  <div class="err" id="err" hidden></div>
-  <div class="footer">Data via ForexFactory (proxied)</div>
+<div class="note" id="note">Loading…</div>
+<ul id="list"></ul>
+<div class="err" id="err" hidden></div>
+<div class="footer">Data via ForexFactory (proxied)</div>
 </main>
 
 <template id="row">
-  <li class="item">
-    <div class="left"></div>
-    <div class="content">
-      <h3 class="title"></h3>
-      <div class="badges"></div>
-      <div class="when"></div>
-      <div class="meta"></div>
-    </div>
-  </li>
+<li class="item">
+<div class="left"></div>
+<div class="content">
+<h3 class="title"></h3>
+<div class="badges"></div>
+<div class="when"></div>
+<div class="meta"></div>
+</div>
+</li>
 </template>
 
 <script>
@@ -86,73 +115,76 @@ const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev/';
 
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 async function fetchWithRetry(url, tries=4){
-  let lastErr;
-  for(let i=0;i<tries;i++){
-    try{
-      const r = await fetch(url, {cache:'no-store'});
-      if(r.ok) return await r.json();
-      lastErr = new Error('HTTP '+r.status);
-    }catch(e){ lastErr = e; }
-    await sleep(600 * (i+1));
-  }
-  throw lastErr;
+let lastErr;
+for(let i=0;i<tries;i++){
+try{
+const r = await fetch(url, {cache:'no-store'});
+if(r.ok) return await r.json();
+lastErr = new Error('HTTP '+r.status);
+}catch(e){ lastErr = e; }
+await sleep(600 * (i+1));
+}
+throw lastErr;
 }
 
 (async function(){
-  const list = document.getElementById('list');
-  const note = document.getElementById('note');
-  const err  = document.getElementById('err');
+const list = document.getElementById('list');
+const note = document.getElementById('note');
+const err  = document.getElementById('err');
 
-  document.getElementById('now').textContent =
-    new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+document.getElementById('now').textContent =
+new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
-  try{
-    const payload = await fetchWithRetry(WORKER, 4);
-    if (!payload.ok) throw new Error(payload.error || 'Proxy error');
+try{
+const payload = await fetchWithRetry(WORKER, 4);
+if (!payload.ok) throw new Error(payload.error || 'Proxy error');
 
-    const items = payload.items || [];
-    const tpl = document.getElementById('row');
-    const fD = new Intl.DateTimeFormat([], {month:'short', day:'2-digit'});
-    const fT = new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
-    const today = new Date().toISOString().slice(0,10);
+```
+const items = payload.items || [];
+const tpl = document.getElementById('row');
+const fD = new Intl.DateTimeFormat([], {month:'short', day:'2-digit'});
+const fT = new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
+const today = new Date().toISOString().slice(0,10);
 
-    list.innerHTML = '';
-    let todays = 0;
+list.innerHTML = '';
+let todays = 0;
 
-    for (const e of items) {
-      const dt = new Date(e.datetime);
-      if (isNaN(dt.getTime())) continue;
+for (const e of items) {
+  const dt = new Date(e.datetime);
+  if (isNaN(dt.getTime())) continue;
 
-      const li = tpl.content.firstElementChild.cloneNode(true);
-      const isToday = (dt.toISOString().slice(0,10) === today);
-      if (isToday){ li.classList.add('today'); todays++; }
+  const li = tpl.content.firstElementChild.cloneNode(true);
+  const isToday = (dt.toISOString().slice(0,10) === today);
+  if (isToday){ li.classList.add('today'); todays++; }
 
-      li.querySelector('.title').textContent = e.title;
+  li.querySelector('.title').textContent = e.title;
 
-      const badges = li.querySelector('.badges');
-      const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-      const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-      if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+  const badges = li.querySelector('.badges');
+  const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+  const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+  if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
 
-      li.querySelector('.when').textContent = `${fD.format(dt)} at ${fT.format(dt)}`;
-      li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+  li.querySelector('.when').textContent = `${fD.format(dt)} at ${fT.format(dt)}`;
+  li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
 
-      list.appendChild(li);
-    }
+  list.appendChild(li);
+}
 
-    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` +
-                       (payload.stale ? ' (cached)' : '');
-    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` +
+                   (payload.stale ? ' (cached)' : '');
+document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 
-    err.hidden = items.length !== 0;
-    if (items.length === 0) err.textContent = 'No USD high-impact events found.';
+err.hidden = items.length !== 0;
+if (items.length === 0) err.textContent = 'No USD high-impact events found.';
 
-  }catch(e){
-    note.textContent = '';
-    err.hidden = false;
-    err.textContent = 'Could not load from proxy: ' + (e.message || e);
-    console.error(e);
-  }
+```
+
+}catch(e){
+note.textContent = '';
+err.hidden = false;
+err.textContent = 'Could not load from proxy: ' + (e.message || e);
+console.error(e);
+}
 })();
 </script>
 </body>
