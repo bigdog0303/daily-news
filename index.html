@@ -11,10 +11,10 @@
 html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
 .statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
 :root{
---bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
---panel:#121316;--panel2:#17181c;--ring:#2a2b31;
---badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
---accent-ring:#5a4b13;--high:#c63b3b;
+  --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
+  --panel:#121316;--panel2:#17181c;--ring:#2a2b31;
+  --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
+  --accent-ring:#5a4b13;--high:#c63b3b;
 }
 body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
 header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
@@ -22,6 +22,13 @@ h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:inl
 .small{color:var(--muted);font-size:12px}
 main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
 .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin:8px 0 0}
+.tab{border:1px solid var(--ring);background:var(--panel2);color:#d7d7dc;padding:6px 12px;border-radius:999px;font-size:12px;cursor:pointer}
+.tab.active{background:var(--accent-ink);border-color:var(--accent-ring);color:#ffe899}
+
+/* list layout */
 ul{list-style:none;margin:0;padding:0}
 .item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .left{width:8px;background:var(--ring)}
@@ -37,6 +44,7 @@ ul{list-style:none;margin:0;padding:0}
 .item.today .left{background:var(--accent)}
 .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
 .err{color:#ff9b9b;margin-top:8px;text-align:center}
+
 /* heatbar */
 .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
@@ -46,13 +54,31 @@ ul{list-style:none;margin:0;padding:0}
 .heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
 .heatmini .fill.pos{left:50%;background:#1f5d2f}
 .heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
+
+/* calendar */
+.cal-wrap{border:1px solid var(--ring);border-radius:16px;background:var(--panel2);padding:10px 10px 6px;margin:14px 0}
+.cal-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 10px}
+.cal-title{font-weight:800;letter-spacing:.2px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-dow{color:var(--muted);font-size:11px;text-align:center;padding:6px 0}
+.cal-cell{border:1px solid var(--ring);border-radius:12px;min-height:70px;padding:6px;position:relative;background:#15161a;cursor:pointer}
+.cal-cell.out{opacity:.5}
+.cal-date{font-size:12px;color:#cfd0d6}
+.cal-dot{position:absolute;right:8px;bottom:8px;font-size:11px;background:#23242a;border:1px solid var(--ring);padding:2px 6px;border-radius:999px;color:#e0e1e6}
+.cal-cell.today{outline:1px solid var(--accent-ring);background:linear-gradient(180deg,rgba(255,216,74,.06),rgba(0,0,0,0))}
+.day-detail{margin-top:10px;border:1px solid var(--ring);border-radius:12px;background:#131419;padding:10px}
+.day-detail h3{margin:0 0 8px;font-size:14px;color:#dfe0e6}
+.day-list{list-style:none;margin:0;padding:0}
+.day-list li{padding:8px 4px;border-top:1px solid var(--ring)}
+.day-list li:first-child{border-top:none}
+.day-time{color:var(--muted);font-size:12px;margin-left:6px}
 </style>
 </head>
 <body>
 <div class="statusbar" aria-hidden="true"></div>
 <header class="top">
   <div class="small" id="now"></div>
-  <h1>High-impact USD events for this week.
+  <h1>High-impact USD events
     <div class="heatmini">
       <span class="badge">US30</span>
       <div class="bar">
@@ -63,13 +89,38 @@ ul{list-style:none;margin:0;padding:0}
     </div>
   </h1>
   <div class="small" id="updated"></div>
+  <div class="tabs">
+    <button id="tabList" class="tab active">List</button>
+    <button id="tabCal"  class="tab">Calendar</button>
+  </div>
 </header>
 
 <main>
   <div class="note" id="note">Loading…</div>
-  <ul id="list"></ul>
-  <div class="err" id="err" hidden></div>
-  <div class="footer">Data via ForexFactory (proxied)</div>
+
+  <!-- LIST VIEW -->
+  <section id="viewList">
+    <ul id="list"></ul>
+    <div class="err" id="err" hidden></div>
+    <div class="footer">Data via ForexFactory (proxied)</div>
+  </section>
+
+  <!-- CALENDAR VIEW -->
+  <section id="viewCal" style="display:none">
+    <div class="cal-wrap">
+      <div class="cal-head">
+        <div class="cal-title" id="calTitle">Month YYYY</div>
+        <div class="small" id="calHint">Tap a day to see events</div>
+      </div>
+      <div class="cal-grid" id="calGrid">
+        <!-- DOW headers inserted in JS -->
+      </div>
+      <div class="day-detail" id="dayDetail" style="display:none">
+        <h3 id="dayDetailTitle">Day details</h3>
+        <ul class="day-list" id="dayDetailList"></ul>
+      </div>
+    </div>
+  </section>
 </main>
 
 <template id="row">
@@ -89,7 +140,7 @@ ul{list-style:none;margin:0;padding:0}
 const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev"; // exact
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Seed items (so you ALWAYS see something)
+// Seed items (fallback so it never goes blank)
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -98,14 +149,11 @@ const SEED_ITEMS = [
 
 // ===== helpers =====
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-function saveCache(items){
-  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{}
-}
-function loadCache(){
-  try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; }
-}
+function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
+function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
+function fmtYMD(d){ return d.toISOString().slice(0,10); }
 
 // ===== US30 mini heatbar (via proxy ?url=) =====
 function setUS30Pct(pct){
@@ -139,15 +187,15 @@ async function fetchUS30(){
 fetchUS30();
 setInterval(fetchUS30, 60000);
 
-// ===== render =====
-function render(items, {cached=false, staleLabel=""}={}){
+// ===== render: LIST =====
+function renderList(items){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   const err  = document.getElementById('err');
 
   list.innerHTML = '';
   const tpl = document.getElementById('row');
-  const todayISO = new Date().toISOString().slice(0,10);
+  const todayISO = fmtYMD(new Date());
   let todays = 0;
 
   for (const e of items){
@@ -157,7 +205,7 @@ function render(items, {cached=false, staleLabel=""}={}){
     let isToday = dstr.startsWith(todayISO);
     if (!isToday){
       const dt = new Date(dstr);
-      if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
+      if (!isNaN(dt)) isToday = fmtYMD(dt) === todayISO;
     }
     if (isToday){ li.classList.add('today'); todays++; }
 
@@ -170,51 +218,167 @@ function render(items, {cached=false, staleLabel=""}={}){
     const dtTry = new Date(dstr);
     const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
     li.querySelector('.when').textContent = whenText;
-
     li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+
     list.appendChild(li);
   }
 
-  const tag = staleLabel || (cached ? " (cached)" : "");
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).${tag}`;
-  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
   err.hidden = items.length !== 0;
   if(items.length === 0) err.textContent = 'No USD high-impact events found.';
 }
+
+// ===== calendar utils =====
+function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
+function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
+function addDays(d, n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function startOfWeekMon(d){
+  const x=new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dow=x.getDay(); // Sun=0..Sat=6
+  const diff = (dow===0 ? -6 : 1 - dow);
+  x.setDate(x.getDate()+diff); x.setHours(0,0,0,0); return x;
+}
+
+// Group items by day string YYYY-MM-DD
+function groupByDay(items){
+  const map = {};
+  for (const e of items){
+    const dt = new Date(e.datetime);
+    const key = isNaN(dt) ? (e.datetime||"").slice(0,10) : fmtYMD(dt);
+    if (!key) continue;
+    (map[key] ||= []).push(e);
+  }
+  return map;
+}
+
+// ===== render: CALENDAR =====
+function renderCalendar(items){
+  const now = new Date();
+  const first = startOfMonth(now);
+  const last  = endOfMonth(now);
+  const gridStart = startOfWeekMon(first);
+  const gridCells = [];
+  let d = new Date(gridStart);
+  while (d <= addDays(last, (7 - ((last.getDay()+6)%7) -1))) { // complete last week to Sunday
+    gridCells.push(new Date(d));
+    d = addDays(d, 1);
+  }
+
+  const byDay = groupByDay(items);
+  const todayKey = fmtYMD(new Date());
+
+  const calGrid = document.getElementById('calGrid');
+  const calTitle= document.getElementById('calTitle');
+  const dayDetail = document.getElementById('dayDetail');
+  const dayDetailTitle = document.getElementById('dayDetailTitle');
+  const dayDetailList  = document.getElementById('dayDetailList');
+
+  calGrid.innerHTML = '';
+  calTitle.textContent = now.toLocaleDateString([], {month:'long', year:'numeric'});
+
+  // DOW headers
+  const dows = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  for (const dname of dows){
+    const h = document.createElement('div');
+    h.className='cal-dow';
+    h.textContent = dname;
+    calGrid.appendChild(h);
+  }
+
+  // Cells
+  for (const day of gridCells){
+    const key = fmtYMD(day);
+    const inMonth = (day.getMonth() === now.getMonth());
+    const evs = byDay[key] || [];
+
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (inMonth ? '' : ' out') + (key===todayKey ? ' today':'');
+    cell.dataset.key = key;
+
+    const dd = document.createElement('div');
+    dd.className='cal-date';
+    dd.textContent = day.getDate();
+    cell.appendChild(dd);
+
+    if (evs.length){
+      const dot = document.createElement('div');
+      dot.className='cal-dot';
+      dot.textContent = (evs.length===1?'• 1':'• '+evs.length);
+      cell.appendChild(dot);
+    }
+
+    cell.addEventListener('click', ()=>{
+      // open details for this day
+      dayDetail.style.display = 'block';
+      const dt = new Date(key);
+      dayDetailTitle.textContent = isNaN(dt) ? key : dt.toLocaleDateString([], {weekday:'long', month:'short', day:'numeric'});
+      dayDetailList.innerHTML = '';
+
+      (byDay[key]||[]).forEach(e=>{
+        const li = document.createElement('li');
+        const time = (()=>{ const t=new Date(e.datetime); return isNaN(t)? e.datetime : `${hhmm(t)}`; })();
+        li.innerHTML = `<strong>${e.title}</strong> <span class="day-time">${time}</span>`;
+        dayDetailList.appendChild(li);
+      });
+    });
+
+    calGrid.appendChild(cell);
+  }
+}
+
+// ===== tabs =====
+const tabList = document.getElementById('tabList');
+const tabCal  = document.getElementById('tabCal');
+const viewList= document.getElementById('viewList');
+const viewCal = document.getElementById('viewCal');
+function setTab(which){
+  if (which==='list'){
+    tabList.classList.add('active'); tabCal.classList.remove('active');
+    viewList.style.display=''; viewCal.style.display='none';
+  }else{
+    tabCal.classList.add('active'); tabList.classList.remove('active');
+    viewCal.style.display=''; viewList.style.display='none';
+  }
+}
+tabList.onclick = ()=> setTab('list');
+tabCal.onclick  = ()=> setTab('cal');
 
 // ===== main =====
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
 (async function(){
-  // 1) Try Worker ROOT (JSON with cache server-side)
-  let used = false;
+  const note = document.getElementById('note');
+  let itemsUsed = null;
+  let staleLabel = '';
+
+  // 1) Try Worker ROOT (server-side cached JSON)
   try{
-    const r = await fetch(WORKER, {cache:"no-store"});
+    const r = await fetch(WORKER, {cache:'no-store'});
     if (r.ok){
       const payload = await r.json();
-      if (payload && payload.items && payload.items.length){
-        saveCache(payload.items);
-        render(payload.items, {cached:false, staleLabel: payload.stale ? " (cached)" : ""});
-        used = true;
+      if (payload?.items?.length){
+        itemsUsed = payload.items;
+        saveCache(itemsUsed);
+        staleLabel = payload.stale ? ' (cached)' : '';
       }
     }
   }catch(_){}
 
-  // 2) Use local cache if worker returned nothing
-  if (!used){
+  // 2) Fallback to local cache
+  if (!itemsUsed){
     const c = loadCache();
-    if (c?.items?.length){
-      render(c.items, {cached:true});
-      used = true;
-    }
+    if (c?.items?.length) { itemsUsed = c.items; staleLabel = ' (cached)'; }
   }
 
-  // 3) Last resort: seed items (the “old ones”)
-  if (!used){
-    render(SEED_ITEMS, {cached:true, staleLabel:" (seed)"});
-  }
+  // 3) Fallback to seed
+  if (!itemsUsed){ itemsUsed = SEED_ITEMS; staleLabel = ' (seed)'; }
+
+  // Render both views
+  renderList(itemsUsed);
+  renderCalendar(itemsUsed);
+  note.textContent = `Events loaded${staleLabel}.`;
+  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 })();
 </script>
 </body>
