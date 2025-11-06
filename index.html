@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>USD Red-Folder — This Week</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0}
+:root{--bg:#0f0f10;--panel:#151517;--panel2:#1a1b1e;--text:#e7e7ea;--muted:#9c9ca3;--ring:#34343a;--accent:#f7d24a;--badge:#232327;--red:#b43333}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text)}
+.top{position:sticky;top:0;padding:18px 16px 10px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,0))}
+h1{margin:0 0 4px;font-size:20px;font-weight:700}.muted{color:var(--muted);font-weight:600}
+.small{color:var(--muted);font-size:12px}
+main{max-width:760px;margin:0 auto;padding:12px}
+.note{margin:10px 0 14px;padding:10px 12px;background:var(--panel);border:1px solid var(--ring);border-radius:12px;color:var(--muted);font-size:14px}
+ul{list-style:none;margin:0;padding:0}
+.item{display:flex;background:var(--panel2);border:1px solid var(--ring);border-radius:16px;margin:10px 0;overflow:hidden}
+.item.today{outline:1px solid var(--accent);background:#1e1b00}
+.left{width:6px;background:var(--ring)} .item.today .left{background:var(--accent)}
+.content{flex:1;padding:14px 16px}
+.title{margin:0 0 6px;font-size:20px;font-weight:700}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.badge{display:inline-flex;gap:6px;align-items:center;padding:4px 8px;background:var(--badge);color:#d7d7dc;border:1px solid var(--ring);border-radius:999px;font-size:12px}
+.badge.today{border-color:var(--accent);background:#1c1a05;color:#ffe88a}
+.badge.high::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--red)}
+.when,.meta{font-size:14px;color:var(--muted)}
+.err{color:#ff9b9b;margin-top:8px}
+.footer{margin-top:16px;text-align:center;color:var(--muted);font-size:12px}
+a{color:#b4b4ff}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="small" id="now"></div>
+  <h1>High-impact USD events for this week. <span class="muted">Today’s events are highlighted.</span></h1>
+  <div class="small" id="updated"></div>
+</header>
+
+<main>
+  <div class="note" id="note">Loading…</div>
+  <div class="small">Feed: <a id="feed" target="_blank" rel="noopener"></a></div>
+  <ul id="list"></ul>
+  <div class="err" id="err" hidden></div>
+  <div class="footer">Data via ForexFactory (proxied)</div>
+</main>
+
+<template id="row">
+  <li class="item">
+    <div class="left"></div>
+    <div class="content">
+      <h3 class="title"></h3>
+      <div class="badges"></div>
+      <div class="when"></div>
+      <div class="meta"></div>
+    </div>
+  </li>
+</template>
+
+<script>
+const WORKER = 'WORKER_URL_HERE'; // ← your workers.dev URL
+
+(async function(){
+  const list = document.getElementById('list');
+  const note = document.getElementById('note');
+  const err  = document.getElementById('err');
+  const feed = document.getElementById('feed');
+
+  document.getElementById('now').textContent =
+    new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+
+  feed.textContent = WORKER; feed.href = WORKER;
+
+  try{
+    const r = await fetch(WORKER, { cache:'no-store' });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const payload = await r.json();
+    if (!payload.ok) throw new Error(payload.error || 'Proxy error');
+
+    const items = payload.items || [];
+    const tpl = document.getElementById('row');
+    const fD = new Intl.DateTimeFormat([], {month:'short', day:'2-digit'});
+    const fT = new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
+    const today = new Date().toISOString().slice(0,10);
+
+    list.innerHTML = '';
+    let todays = 0;
+
+    for (const e of items) {
+      const dt = new Date(e.datetime);
+      if (isNaN(dt.getTime())) continue;
+
+      const li = tpl.content.firstElementChild.cloneNode(true);
+      if (dt.toISOString().slice(0,10) === today) { li.classList.add('today'); todays++; }
+
+      li.querySelector('.title').textContent = e.title;
+
+      const badges = li.querySelector('.badges');
+      const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+      const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+      if (li.classList.contains('today')) { const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+
+      li.querySelector('.when').textContent = `${fD.format(dt)} at ${fT.format(dt)}`;
+      li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+
+      list.appendChild(li);
+    }
+
+    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+    if(items.length===0){ err.hidden=false; err.textContent='No USD high-impact events found.'; }
+    else err.hidden=true;
+
+  }catch(e){
+    note.textContent = '';
+    err.hidden = false;
+    err.textContent = 'Could not load from proxy: ' + (e.message || e);
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
