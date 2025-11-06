@@ -86,70 +86,28 @@ ul{list-style:none;margin:0;padding:0}
 
 <script>
 // ===== CONFIG =====
-const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev";
-const CACHE_KEY = "ff_usd_high_cache_v2"; // bump key for fresh format
-const CACHE_MAX_DAYS = 7;
+const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev"; // exact
+const CACHE_KEY = "ff_usd_high_cache_final";
+
+// Seed items (so you ALWAYS see something)
+const SEED_ITEMS = [
+  { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+  { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
+  { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+];
 
 // ===== helpers =====
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-const txt = (node, tag) => {
-  const el = node.getElementsByTagName(tag)[0];
-  return el ? (el.textContent || "").trim() : "";
-};
-
 function saveCache(items){
   try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{}
 }
 function loadCache(){
-  try{
-    const raw = localStorage.getItem(CACHE_KEY);
-    if(!raw) return null;
-    const obj = JSON.parse(raw);
-    const ageDays = (Date.now() - (obj.ts||0))/86400000;
-    if(ageDays > CACHE_MAX_DAYS) return null;
-    return obj;
-  }catch{ return null; }
+  try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; }
 }
-
-async function fetchTextWithRetry(urls, tries=2){
-  let lastErr;
-  for (const url of urls){
-    for (let i=0;i<tries;i++){
-      try{
-        const r = await fetch(url, {cache:'no-store'});
-        if (r.ok) return await r.text();
-        lastErr = new Error('HTTP '+r.status);
-      }catch(e){ lastErr = e; }
-      await sleep(400*(i+1));
-    }
-  }
-  throw lastErr;
-}
-
-function parseFF(xmlString){
-  const doc = new DOMParser().parseFromString(xmlString, "text/xml");
-  const events = Array.from(doc.getElementsByTagName("event")).map(ev => ({
-    title: txt(ev, "title"),
-    datetime: txt(ev, "date"),
-    impact: txt(ev, "impact"),
-    currency: txt(ev, "currency"),
-    actual: txt(ev, "actual")
-  }));
-  // Filter USD + High (case-insensitive, tolerant)
-  return events.filter(e =>
-    (e.currency||"").toUpperCase() === "USD" &&
-    /high/i.test(e.impact||"")
-  );
-}
-
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-// ===== UI init =====
-document.getElementById('now').textContent =
-  new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
-
-// ===== US30 mini heatbar =====
+// ===== US30 mini heatbar (via proxy ?url=) =====
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -182,7 +140,7 @@ fetchUS30();
 setInterval(fetchUS30, 60000);
 
 // ===== render =====
-function render(items, {cached=false}={}){
+function render(items, {cached=false, staleLabel=""}={}){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   const err  = document.getElementById('err');
@@ -195,7 +153,6 @@ function render(items, {cached=false}={}){
   for (const e of items){
     const li = tpl.content.firstElementChild.cloneNode(true);
 
-    // best-effort "today" (match if the date string starts with today's ISO or parses to today)
     const dstr = e.datetime || "";
     let isToday = dstr.startsWith(todayISO);
     if (!isToday){
@@ -210,7 +167,6 @@ function render(items, {cached=false}={}){
     const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
     if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
 
-    // show the raw date string if Date parsing fails
     const dtTry = new Date(dstr);
     const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
     li.querySelector('.when').textContent = whenText;
@@ -219,7 +175,8 @@ function render(items, {cached=false}={}){
     list.appendChild(li);
   }
 
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` + (cached ? ' (cached)' : '');
+  const tag = staleLabel || (cached ? " (cached)" : "");
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).${tag}`;
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 
   err.hidden = items.length !== 0;
@@ -227,35 +184,36 @@ function render(items, {cached=false}={}){
 }
 
 // ===== main =====
+document.getElementById('now').textContent =
+  new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+
 (async function(){
-  // 1) show cache immediately if present
-  const cached = loadCache();
-  if (cached?.items?.length) render(cached.items, {cached:true});
-
-  // 2) fetch fresh via mirrors
+  // 1) Try Worker ROOT (JSON with cache server-side)
+  let used = false;
   try{
-    const urls = [
-      `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
-      `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.xml")}`,
-      `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_this.xml")}`,
-    ];
-    const xml = await fetchTextWithRetry(urls, 2);
-    const items = parseFF(xml);
+    const r = await fetch(WORKER, {cache:"no-store"});
+    if (r.ok){
+      const payload = await r.json();
+      if (payload && payload.items && payload.items.length){
+        saveCache(payload.items);
+        render(payload.items, {cached:false, staleLabel: payload.stale ? " (cached)" : ""});
+        used = true;
+      }
+    }
+  }catch(_){}
 
-    if (items.length){
-      saveCache(items);
-      render(items, {cached:false});
-    } else if (!cached?.items?.length){
-      render([], {cached:false});
+  // 2) Use local cache if worker returned nothing
+  if (!used){
+    const c = loadCache();
+    if (c?.items?.length){
+      render(c.items, {cached:true});
+      used = true;
     }
-  }catch(e){
-    if (!cached?.items?.length){
-      const err = document.getElementById('err');
-      document.getElementById('note').textContent = '';
-      err.hidden = false;
-      err.textContent = 'Could not load from proxy: ' + (e.message || e);
-    }
-    console.error(e);
+  }
+
+  // 3) Last resort: seed items (the “old ones”)
+  if (!used){
+    render(SEED_ITEMS, {cached:true, staleLabel:" (seed)"});
   }
 })();
 </script>
