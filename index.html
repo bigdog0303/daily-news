@@ -5,198 +5,237 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>High-impact USD — This Week</title>
 
-<!-- Make iOS/Safari paint dark behind the status bar -->
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <style>
-/* Fill the entire screen, including the iOS safe area, with dark bg */
 html, body {
-margin: 0;
-padding: 0;
-height: 100%;
-background: #0c0c0e;
-color-scheme: dark;
--webkit-font-smoothing: antialiased;
--webkit-text-size-adjust: 100%;
+  margin: 0; padding: 0; height: 100%;
+  background: #0c0c0e; color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
 }
-
-/* This fixed bar paints the notch/status area black on iOS */
 .statusbar {
-position: fixed;
-top: 0; left: 0; right: 0;
-height: env(safe-area-inset-top, 0);
-height: constant(safe-area-inset-top, 0);
-background: #0c0c0e;
-z-index: 9999;
-pointer-events: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: env(safe-area-inset-top, 0);
+  background: #0c0c0e; z-index: 9999;
+  pointer-events: none;
 }
-
-* { box-sizing:border-box }
 :root{
---bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
---panel:#121316; --panel2:#17181c; --ring:#2a2b31;
---badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
---accent-ring:#5a4b13; --high:#c63b3b;
+  --bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
+  --panel:#121316; --panel2:#17181c; --ring:#2a2b31;
+  --badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
+  --accent-ring:#5a4b13; --high:#c63b3b;
 }
-
 body {
-font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-background: var(--bg);
-color: var(--text);
-overflow-x: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background: var(--bg); color: var(--text);
+  overflow-x: hidden;
 }
-
-/* --- header (non-sticky so it never covers content) --- */
 header.top {
-padding: calc(8px + env(safe-area-inset-top, 0)) 16px 10px;
-border-bottom: 1px solid var(--ring);
-background: var(--bg);
+  padding: calc(8px + env(safe-area-inset-top, 0)) 16px 10px;
+  border-bottom: 1px solid var(--ring);
+  background: var(--bg);
 }
 h1 {
-margin: 0 0 2px;
-font-size: 28px;
-letter-spacing: .2px;
-font-weight: 800;
+  margin: 0 0 2px; font-size: 28px; letter-spacing: .2px; font-weight: 800;
 }
-h1 .muted { color: #b9bac2; font-weight: 700; }
 .small { color: var(--muted); font-size: 12px }
 
-/* --- content --- */
+/* --- Heatbar styles --- */
+.heatmini{display:inline-flex;align-items:center;gap:8px;margin-left:10px;vertical-align:baseline}
+.heatmini .badge{font-size:12px;color:var(--muted);font-weight:800;letter-spacing:.2px}
+.heatmini .val{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
+.heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
+.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
+.heatmini .fill.pos{left:50%;background:#1f5d2f}
+.heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
+@media (max-width: 420px){
+  .heatmini{display:block;margin:6px 0 0 0}
+}
+
 main { max-width: 880px; margin: 0 auto; padding: 14px 12px 40px }
 .note {
-display:flex; align-items:center; justify-content:center; min-height:48px;
-margin:14px 0 12px; padding:10px 14px; border-radius:14px;
-background:var(--panel2); border:1px solid var(--ring); color:#c9cad1; font-weight:600;
+  display:flex; align-items:center; justify-content:center; min-height:48px;
+  margin:14px 0 12px; padding:10px 14px; border-radius:14px;
+  background:var(--panel2); border:1px solid var(--ring); color:#c9cad1; font-weight:600;
 }
 ul { list-style:none; margin:0; padding:0 }
 .item {
-display:flex; border-radius:22px; background:var(--panel2); border:1px solid var(--ring);
-margin:16px 0; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.35);
+  display:flex; border-radius:22px; background:var(--panel2); border:1px solid var(--ring);
+  margin:16px 0; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.35);
 }
 .left { width:8px; background:var(--ring) }
 .content { flex:1; padding:18px 18px 16px }
 .title { margin:0 0 10px; font-size:22px; font-weight:800; letter-spacing:.2px }
 .badges { display:flex; gap:10px; flex-wrap:wrap; margin:-2px 0 10px }
 .badge {
-display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
-background:var(--badge); border:1px solid var(--ring); font-size:12px; color:#d7d7dc;
+  display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
+  background:var(--badge); border:1px solid var(--ring); font-size:12px; color:#d7d7dc;
 }
 .badge.high::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--high) }
 .badge.today { border-color:var(--accent); background:var(--accent-ink); color:#ffe899 }
 .when, .meta { font-size:14px; color:var(--muted) }
 .when { margin-bottom:6px }
 .item.today {
-background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
-outline:1px solid var(--accent-ring);
+  background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
+  outline:1px solid var(--accent-ring);
 }
 .item.today .left { background:var(--accent) }
 .footer { margin-top:22px; text-align:center; color:var(--muted); font-size:12px }
 .err { color:#ff9b9b; margin-top:8px; text-align:center }
 </style>
 </head>
+
 <body>
-<!-- Paint the iOS safe-area (notch/status bar) dark -->
 <div class="statusbar" aria-hidden="true"></div>
 
 <header class="top">
-<div class="small" id="now"></div>
-<h1>High-impact USD events for this week.</h1>
-<div class="small" id="updated"></div>
+  <div class="small" id="now"></div>
+  <h1>
+    High-impact USD events for this week.
+    <span id="hb" class="heatmini">
+      <span class="badge">US30</span>
+      <span class="bar">
+        <span class="zero"></span>
+        <span id="hbFill" class="fill pos" style="width:0%"></span>
+      </span>
+      <span id="hbVal" class="val">0.00%</span>
+    </span>
+  </h1>
+  <div class="small" id="updated"></div>
 </header>
 
 <main>
-<div class="note" id="note">Loading…</div>
-<ul id="list"></ul>
-<div class="err" id="err" hidden></div>
-<div class="footer">Data via ForexFactory (proxied)</div>
+  <div class="note" id="note">Loading…</div>
+  <ul id="list"></ul>
+  <div class="err" id="err" hidden></div>
+  <div class="footer">Data via ForexFactory (proxied)</div>
 </main>
 
 <template id="row">
-<li class="item">
-<div class="left"></div>
-<div class="content">
-<h3 class="title"></h3>
-<div class="badges"></div>
-<div class="when"></div>
-<div class="meta"></div>
-</div>
-</li>
+  <li class="item">
+    <div class="left"></div>
+    <div class="content">
+      <h3 class="title"></h3>
+      <div class="badges"></div>
+      <div class="when"></div>
+      <div class="meta"></div>
+    </div>
+  </li>
 </template>
 
 <script>
-const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev/';
+const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev';
 
+// ---- US30 mini heatbar logic ----
+function setUS30Pct(pct){
+  const val = document.getElementById('hbVal');
+  const fill = document.getElementById('hbFill');
+  if(!val || !fill) return;
+
+  const CAP = 2;
+  const mag = Math.min(Math.abs(pct), CAP);
+  const half = 50;
+  const w = (mag / CAP) * half;
+
+  fill.classList.remove('pos','neg');
+  if (pct >= 0){ fill.classList.add('pos'); val.style.color = '#22c55e'; }
+  else         { fill.classList.add('neg'); val.style.color = '#ef4444'; }
+
+  fill.style.width = w.toFixed(2) + '%';
+  val.textContent = (pct>=0?'+':'') + pct.toFixed(2) + '%';
+}
+
+function setUS30From(last, prevClose){
+  if(!isFinite(last) || !isFinite(prevClose) || prevClose === 0) return;
+  const pct = ((last - prevClose) / prevClose) * 100;
+  setUS30Pct(pct);
+}
+
+// quick demo via ?us30=0.42
+(function(){
+  const p = new URLSearchParams(location.search);
+  if(p.has('us30')){
+    const v = parseFloat(p.get('us30'));
+    if(isFinite(v)) setUS30Pct(v);
+  } else {
+    setUS30Pct(0);
+  }
+})();
+
+// ---- main feed ----
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 async function fetchWithRetry(url, tries=4){
-let lastErr;
-for(let i=0;i<tries;i++){
-try{
-const r = await fetch(url, {cache:'no-store'});
-if(r.ok) return await r.json();
-lastErr = new Error('HTTP '+r.status);
-}catch(e){ lastErr = e; }
-await sleep(600 * (i+1));
-}
-throw lastErr;
+  let lastErr;
+  for(let i=0;i<tries;i++){
+    try{
+      const r = await fetch(url, {cache:'no-store'});
+      if(r.ok) return await r.json();
+      lastErr = new Error('HTTP '+r.status);
+    }catch(e){ lastErr = e; }
+    await sleep(600 * (i+1));
+  }
+  throw lastErr;
 }
 
 (async function(){
-const list = document.getElementById('list');
-const note = document.getElementById('note');
-const err  = document.getElementById('err');
+  const list = document.getElementById('list');
+  const note = document.getElementById('note');
+  const err  = document.getElementById('err');
 
-document.getElementById('now').textContent =
-new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+  document.getElementById('now').textContent =
+    new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
-try{
-const payload = await fetchWithRetry(WORKER, 4);
-if (!payload.ok) throw new Error(payload.error || 'Proxy error');
+  try{
+    const payload = await fetchWithRetry(WORKER, 4);
+    if (!payload.ok) throw new Error(payload.error || 'Proxy error');
 
-const items = payload.items || [];
-const tpl = document.getElementById('row');
-const fD = new Intl.DateTimeFormat([], {month:'short', day:'2-digit'});
-const fT = new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
-const today = new Date().toISOString().slice(0,10);
+    const items = payload.items || [];
+    const tpl = document.getElementById('row');
+    const fD = new Intl.DateTimeFormat([], {month:'short', day:'2-digit'});
+    const fT = new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
+    const today = new Date().toISOString().slice(0,10);
 
-list.innerHTML = '';
-let todays = 0;
+    list.innerHTML = '';
+    let todays = 0;
 
-for (const e of items) {
-  const dt = new Date(e.datetime);
-  if (isNaN(dt.getTime())) continue;
+    for (const e of items) {
+      const dt = new Date(e.datetime);
+      if (isNaN(dt.getTime())) continue;
 
-  const li = tpl.content.firstElementChild.cloneNode(true);
-  const isToday = (dt.toISOString().slice(0,10) === today);
-  if (isToday){ li.classList.add('today'); todays++; }
+      const li = tpl.content.firstElementChild.cloneNode(true);
+      const isToday = (dt.toISOString().slice(0,10) === today);
+      if (isToday){ li.classList.add('today'); todays++; }
 
-  li.querySelector('.title').textContent = e.title;
+      li.querySelector('.title').textContent = e.title;
 
-  const badges = li.querySelector('.badges');
-  const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-  const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-  if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+      const badges = li.querySelector('.badges');
+      const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+      const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+      if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
 
-  li.querySelector('.when').textContent = `${fD.format(dt)} at ${fT.format(dt)}`;
-  li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+      li.querySelector('.when').textContent = `${fD.format(dt)} at ${fT.format(dt)}`;
+      li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
 
-  list.appendChild(li);
-}
+      list.appendChild(li);
+    }
 
-note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` +
-                   (payload.stale ? ' (cached)' : '');
-document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` +
+                       (payload.stale ? ' (cached)' : '');
+    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 
-err.hidden = items.length !== 0;
-if (items.length === 0) err.textContent = 'No USD high-impact events found.';
+    err.hidden = items.length !== 0;
+    if (items.length === 0) err.textContent = 'No USD high-impact events found.';
 
-}catch(e){
-note.textContent = '';
-err.hidden = false;
-err.textContent = 'Could not load from proxy: ' + (e.message || e);
-console.error(e);
-}
+  }catch(e){
+    note.textContent = '';
+    err.hidden = false;
+    err.textContent = 'Could not load from proxy: ' + (e.message || e);
+    console.error(e);
+  }
 })();
 </script>
 </body>
