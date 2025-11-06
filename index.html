@@ -10,135 +10,60 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
 <style>
-html, body {
-  margin: 0; padding: 0; height: 100%;
-  background: #0c0c0e; color-scheme: dark;
-  -webkit-font-smoothing: antialiased;
-  -webkit-text-size-adjust: 100%;
-}
-.statusbar {
-  position: fixed; top: 0; left: 0; right: 0;
-  height: env(safe-area-inset-top, 0);
-  background: #0c0c0e; z-index: 9999;
-  pointer-events: none;
-}
+html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+.statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
 :root{
-  --bg:#0c0c0e; --text:#e9e9ee; --muted:#9fa0a8;
-  --panel:#121316; --panel2:#17181c; --ring:#2a2b31;
-  --badge:#1f2025; --accent:#ffd84a; --accent-ink:#201b07;
-  --accent-ring:#5a4b13; --high:#c63b3b;
+--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
+--panel:#121316;--panel2:#17181c;--ring:#2a2b31;
+--badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
+--accent-ring:#5a4b13;--high:#c63b3b;
 }
-body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-  background: var(--bg); color: var(--text);
-  overflow-x: hidden;
-}
-header.top {
-  padding: calc(8px + env(safe-area-inset-top, 0)) 16px 10px;
-  border-bottom: 1px solid var(--ring);
-  background: var(--bg);
-}
-h1 {
-  margin: 0 0 2px; font-size: 28px; letter-spacing: .2px; font-weight: 800;
-}
-.small { color: var(--muted); font-size: 12px }
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
+header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
+h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.small{color:var(--muted);font-size:12px}
+main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
+.note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
+ul{list-style:none;margin:0;padding:0}
+.item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.left{width:8px;background:var(--ring)}
+.content{flex:1;padding:18px 18px 16px}
+.title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--badge);border:1px solid var(--ring);font-size:12px;color:#d7d7dc}
+.badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
+.badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
+.when,.meta{font-size:14px;color:var(--muted)}
+.when{margin-bottom:6px}
+.item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
+.item.today .left{background:var(--accent)}
+.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+.err{color:#ff9b9b;margin-top:8px;text-align:center}
 
-/* --- Heatbar styles --- */
-.heatmini {
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  margin-left:16px;
-  vertical-align:middle;
-}
-.heatmini .badge {
-  font-size:13px;
-  color:var(--muted);
-  font-weight:800;
-  letter-spacing:.3px;
-  padding:4px 10px;
-  border-radius:999px;
-  background:var(--panel2);
-  border:1px solid var(--ring);
-}
-.heatmini .val {
-  font-size:13px;
-  font-variant-numeric:tabular-nums;
-  min-width:50px;
-  text-align:right;
-}
-.heatmini .bar {
-  position:relative;
-  width:96px;
-  height:10px;
-  border-radius:999px;
-  background:var(--panel2);
-  border:1px solid var(--ring);
-  overflow:hidden;
-}
-.heatmini .zero {
-  position:absolute;
-  left:50%;
-  top:0; bottom:0;
-  width:1px;
-  background:#3a3b42;
-}
-.heatmini .fill {
-  position:absolute;
-  top:0; bottom:0;
-  transition:width .25s ease,left .25s ease,background .25s ease;
-}
-.heatmini .fill.pos { left:50%; background:#1f5d2f; }
-.heatmini .fill.neg { right:50%; left:auto; background:#7a1f1f; }
-
-main { max-width: 880px; margin: 0 auto; padding: 14px 12px 40px }
-.note {
-  display:flex; align-items:center; justify-content:center; min-height:48px;
-  margin:14px 0 12px; padding:10px 14px; border-radius:14px;
-  background:var(--panel2); border:1px solid var(--ring); color:#c9cad1; font-weight:600;
-}
-ul { list-style:none; margin:0; padding:0 }
-.item {
-  display:flex; border-radius:22px; background:var(--panel2); border:1px solid var(--ring);
-  margin:16px 0; overflow:hidden; box-shadow:0 1px 0 rgba(0,0,0,.35);
-}
-.left { width:8px; background:var(--ring) }
-.content { flex:1; padding:18px 18px 16px }
-.title { margin:0 0 10px; font-size:22px; font-weight:800; letter-spacing:.2px }
-.badges { display:flex; gap:10px; flex-wrap:wrap; margin:-2px 0 10px }
-.badge {
-  display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
-  background:var(--badge); border:1px solid var(--ring); font-size:12px; color:#d7d7dc;
-}
-.badge.high::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--high) }
-.badge.today { border-color:var(--accent); background:var(--accent-ink); color:#ffe899 }
-.when, .meta { font-size:14px; color:var(--muted) }
-.when { margin-bottom:6px }
-.item.today {
-  background:linear-gradient(180deg, rgba(255,216,74,.08), rgba(0,0,0,0));
-  outline:1px solid var(--accent-ring);
-}
-.item.today .left { background:var(--accent) }
-.footer { margin-top:22px; text-align:center; color:var(--muted); font-size:12px }
-.err { color:#ff9b9b; margin-top:8px; text-align:center }
+/* --- heatbar styles --- */
+.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
+.heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
+.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
+.heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
+.heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
+.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
+.heatmini .fill.pos{left:50%;background:#1f5d2f}
+.heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
 </style>
 </head>
-
 <body>
 <div class="statusbar" aria-hidden="true"></div>
-
 <header class="top">
   <div class="small" id="now"></div>
-  <h1>
-    High-impact USD events for this week.
-    <span id="hb" class="heatmini">
+  <h1>High-impact USD events for this week.
+    <div class="heatmini">
       <span class="badge">US30</span>
-      <span class="bar">
-        <span class="zero"></span>
-        <span id="hbFill" class="fill pos" style="width:0%"></span>
-      </span>
-      <span id="hbVal" class="val">0.00%</span>
-    </span>
+      <div class="bar">
+        <div class="zero"></div>
+        <div id="hbFill" class="fill"></div>
+      </div>
+      <span id="hbVal" class="val">+0.00%</span>
+    </div>
   </h1>
   <div class="small" id="updated"></div>
 </header>
@@ -151,141 +76,120 @@ ul { list-style:none; margin:0; padding:0 }
 </main>
 
 <template id="row">
-  <li class="item">
-    <div class="left"></div>
-    <div class="content">
-      <h3 class="title"></h3>
-      <div class="badges"></div>
-      <div class="when"></div>
-      <div class="meta"></div>
-    </div>
-  </li>
+<li class="item">
+  <div class="left"></div>
+  <div class="content">
+    <h3 class="title"></h3>
+    <div class="badges"></div>
+    <div class="when"></div>
+    <div class="meta"></div>
+  </div>
+</li>
 </template>
 
 <script>
-const WORKER = 'https://proud-rice-2425.mikaelalexiou.workers.dev';
+const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev";
 
-// ---- US30 mini heatbar logic ----
-function setUS30Pct(pct){
-  const val = document.getElementById('hbVal');
-  const fill = document.getElementById('hbFill');
-  if(!val || !fill) return;
-
-  const CAP = 2;
-  const mag = Math.min(Math.abs(pct), CAP);
-  const half = 50;
-  const w = (mag / CAP) * half;
-
-  fill.classList.remove('pos','neg');
-  if (pct >= 0){ fill.classList.add('pos'); val.style.color = '#22c55e'; }
-  else         { fill.classList.add('neg'); val.style.color = '#ef4444'; }
-
-  fill.style.width = w.toFixed(2) + '%';
-  val.textContent = (pct>=0?'+':'') + pct.toFixed(2) + '%';
-}
-
-function setUS30From(last, prevClose){
-  if(!isFinite(last) || !isFinite(prevClose) || prevClose === 0) return;
-  const pct = ((last - prevClose) / prevClose) * 100;
-  setUS30Pct(pct);
-}
-
-// ---- Live US30 price updater ----
-async function fetchUS30Live(){
-  try {
-    const url = "https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m";
-    const res = await fetch(url);
-    const data = await res.json();
-    const result = data.chart?.result?.[0];
-    if(!result) return;
-
-    const meta = result.meta;
-    const last = meta.regularMarketPrice;
-    const prev = meta.chartPreviousClose;
-
-    if (last && prev) {
-      setUS30From(last, prev);
-    }
-  } catch (e) {
-    console.error("US30 fetch error:", e);
-  }
-}
-
-// Update once on load + repeat every 60s
-fetchUS30Live();
-setInterval(fetchUS30Live, 60000);
-
-// ---- Main news feed ----
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
 async function fetchWithRetry(url, tries=4){
   let lastErr;
   for(let i=0;i<tries;i++){
     try{
-      const r = await fetch(url, {cache:'no-store'});
+      const r = await fetch(url,{cache:'no-store'});
       if(r.ok) return await r.json();
       lastErr = new Error('HTTP '+r.status);
-    }catch(e){ lastErr = e; }
-    await sleep(600 * (i+1));
+    }catch(e){ lastErr=e; }
+    await sleep(600*(i+1));
   }
   throw lastErr;
 }
 
 (async function(){
-  const list = document.getElementById('list');
-  const note = document.getElementById('note');
-  const err  = document.getElementById('err');
-
-  document.getElementById('now').textContent =
-    new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+  const list=document.getElementById('list');
+  const note=document.getElementById('note');
+  const err=document.getElementById('err');
+  document.getElementById('now').textContent=
+    new Intl.DateTimeFormat([],{hour:'2-digit',minute:'2-digit'}).format(new Date());
 
   try{
-    const payload = await fetchWithRetry(WORKER, 4);
-    if (!payload.ok) throw new Error(payload.error || 'Proxy error');
+    const payload = await fetchWithRetry(WORKER,4);
+    if(!payload.ok) throw new Error(payload.error||'Proxy error');
 
-    const items = payload.items || [];
-    const tpl = document.getElementById('row');
-    const fD = new Intl.DateTimeFormat([], {month:'short', day:'2-digit'});
-    const fT = new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'});
-    const today = new Date().toISOString().slice(0,10);
+    const items=payload.items||[];
+    const tpl=document.getElementById('row');
+    const fD=new Intl.DateTimeFormat([],{month:'short',day:'2-digit'});
+    const fT=new Intl.DateTimeFormat([],{hour:'2-digit',minute:'2-digit'});
+    const today=new Date().toISOString().slice(0,10);
 
-    list.innerHTML = '';
-    let todays = 0;
-
-    for (const e of items) {
-      const dt = new Date(e.datetime);
-      if (isNaN(dt.getTime())) continue;
-
-      const li = tpl.content.firstElementChild.cloneNode(true);
-      const isToday = (dt.toISOString().slice(0,10) === today);
-      if (isToday){ li.classList.add('today'); todays++; }
-
-      li.querySelector('.title').textContent = e.title;
-
-      const badges = li.querySelector('.badges');
-      const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-      const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-      if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
-
-      li.querySelector('.when').textContent = `${fD.format(dt)} at ${fT.format(dt)}`;
-      li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
-
+    list.innerHTML='';
+    let todays=0;
+    for(const e of items){
+      const dt=new Date(e.datetime);
+      if(isNaN(dt.getTime())) continue;
+      const li=tpl.content.firstElementChild.cloneNode(true);
+      const isToday=(dt.toISOString().slice(0,10)===today);
+      if(isToday){li.classList.add('today');todays++;}
+      li.querySelector('.title').textContent=e.title;
+      const badges=li.querySelector('.badges');
+      const b1=document.createElement('span');b1.className='badge';b1.textContent='USD';badges.appendChild(b1);
+      const b2=document.createElement('span');b2.className='badge high';b2.textContent='High';badges.appendChild(b2);
+      if(isToday){const b3=document.createElement('span');b3.className='badge today';b3.textContent='Today';badges.appendChild(b3);}
+      li.querySelector('.when').textContent=`${fD.format(dt)} at ${fT.format(dt)}`;
+      li.querySelector('.meta').textContent=e.actual?`Impact: High · ${e.actual}`:'Impact: High';
       list.appendChild(li);
     }
 
-    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` +
-                       (payload.stale ? ' (cached)' : '');
-    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-
-    err.hidden = items.length !== 0;
-    if (items.length === 0) err.textContent = 'No USD high-impact events found.';
-
+    note.textContent=`Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`+
+                     (payload.stale?' (cached)':'');
+    document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
+    err.hidden=items.length!==0;
+    if(items.length===0) err.textContent='No USD high-impact events found.';
   }catch(e){
-    note.textContent = '';
-    err.hidden = false;
-    err.textContent = 'Could not load from proxy: ' + (e.message || e);
+    note.textContent='';err.hidden=false;err.textContent='Could not load from proxy: '+(e.message||e);
     console.error(e);
   }
 })();
+
+/* ---- US30 heatbar logic ---- */
+function setUS30Pct(pct){
+  const val=document.getElementById('hbVal');
+  const fill=document.getElementById('hbFill');
+  if(!val||!fill) return;
+  const CAP=2;
+  const mag=Math.min(Math.abs(pct),CAP);
+  const half=50;
+  const w=(mag/CAP)*half;
+  fill.classList.remove('pos','neg');
+  if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
+  else{fill.classList.add('neg');val.style.color='#ef4444';}
+  fill.style.width=w.toFixed(2)+'%';
+  val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+}
+
+function setUS30From(last,prevClose){
+  if(!isFinite(last)||!isFinite(prevClose)||prevClose===0)return;
+  const pct=((last-prevClose)/prevClose)*100;
+  setUS30Pct(pct);
+}
+
+/* ---- Live US30 updater via Cloudflare Worker ---- */
+async function fetchUS30Live(){
+  try{
+    const target=encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m");
+    const proxyUrl=`${WORKER}/?url=${target}`;
+    const res=await fetch(proxyUrl);
+    const data=await res.json();
+    const result=data.chart?.result?.[0];
+    if(!result)return;
+    const meta=result.meta;
+    const last=meta.regularMarketPrice;
+    const prev=meta.chartPreviousClose;
+    if(last&&prev){setUS30From(last,prev);}
+  }catch(e){console.error("US30 fetch error:",e);}
+}
+
+fetchUS30Live();
+setInterval(fetchUS30Live,60000);
 </script>
 </body>
 </html>
