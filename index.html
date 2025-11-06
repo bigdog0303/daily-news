@@ -4,11 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>High-impact USD — This Week</title>
-
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
 <style>
 html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
 .statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
@@ -39,8 +37,7 @@ ul{list-style:none;margin:0;padding:0}
 .item.today .left{background:var(--accent)}
 .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
 .err{color:#ff9b9b;margin-top:8px;text-align:center}
-
-/* --- heatbar --- */
+/* heatbar */
 .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
 .heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
@@ -90,64 +87,58 @@ ul{list-style:none;margin:0;padding:0}
 <script>
 // ===== CONFIG =====
 const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev";
-const CACHE_KEY = "ff_usd_high_cache_v1";
+const CACHE_KEY = "ff_usd_high_cache_v2"; // bump key for fresh format
 const CACHE_MAX_DAYS = 7;
 
 // ===== helpers =====
 const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+const txt = (node, tag) => {
+  const el = node.getElementsByTagName(tag)[0];
+  return el ? (el.textContent || "").trim() : "";
+};
+
 function saveCache(items){
-  try{
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items}));
-  }catch{}
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{}
 }
 function loadCache(){
   try{
     const raw = localStorage.getItem(CACHE_KEY);
     if(!raw) return null;
     const obj = JSON.parse(raw);
-    if(!obj || !Array.isArray(obj.items)) return null;
-    const ageDays = (Date.now() - (obj.ts||0)) / 86400000;
+    const ageDays = (Date.now() - (obj.ts||0))/86400000;
     if(ageDays > CACHE_MAX_DAYS) return null;
     return obj;
   }catch{ return null; }
 }
 
-async function fetchTextWithRetry(urls, tries=3){
+async function fetchTextWithRetry(urls, tries=2){
   let lastErr;
   for (const url of urls){
-    for(let i=0;i<tries;i++){
+    for (let i=0;i<tries;i++){
       try{
-        const r = await fetch(url, { cache:'no-store' });
+        const r = await fetch(url, {cache:'no-store'});
         if (r.ok) return await r.text();
         lastErr = new Error('HTTP '+r.status);
       }catch(e){ lastErr = e; }
-      await sleep(500 * (i+1));
+      await sleep(400*(i+1));
     }
   }
   throw lastErr;
 }
 
-function parseFF(xml){
-  // tolerant XML parse
-  const blocks = [...xml.matchAll(/<event>([\s\S]*?)<\/event>/gi)];
-  const pick = (b, tag) => {
-    const m = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i').exec(b);
-    return m ? m[1].trim() : '';
-  };
-  const items = blocks.map(x=>{
-    const b = x[1];
-    return {
-      title: pick(b,'title'),
-      datetime: pick(b,'date'),
-      impact: pick(b,'impact'),
-      currency: pick(b,'currency'),
-      actual: pick(b,'actual')
-    };
-  });
-  // Filter: USD + "high" (case-insensitive)
-  return items.filter(e =>
-    (e.currency || '').toUpperCase() === 'USD' &&
-    /high/i.test(e.impact || '')
+function parseFF(xmlString){
+  const doc = new DOMParser().parseFromString(xmlString, "text/xml");
+  const events = Array.from(doc.getElementsByTagName("event")).map(ev => ({
+    title: txt(ev, "title"),
+    datetime: txt(ev, "date"),
+    impact: txt(ev, "impact"),
+    currency: txt(ev, "currency"),
+    actual: txt(ev, "actual")
+  }));
+  // Filter USD + High (case-insensitive, tolerant)
+  return events.filter(e =>
+    (e.currency||"").toUpperCase() === "USD" &&
+    /high/i.test(e.impact||"")
   );
 }
 
@@ -185,28 +176,32 @@ async function fetchUS30(){
         setUS30Pct(pct);
       }
     }
-  }catch(e){ /* ignore blips */ }
+  }catch(e){}
 }
 fetchUS30();
 setInterval(fetchUS30, 60000);
 
-// ===== render helpers =====
-function renderItems(items, {cached=false}={}){
+// ===== render =====
+function render(items, {cached=false}={}){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   const err  = document.getElementById('err');
 
   list.innerHTML = '';
   const tpl = document.getElementById('row');
-  const todayKey = new Date().toISOString().slice(0,10);
+  const todayISO = new Date().toISOString().slice(0,10);
   let todays = 0;
 
   for (const e of items){
-    const dt = new Date(e.datetime);
-    if (isNaN(dt)) continue;
-
     const li = tpl.content.firstElementChild.cloneNode(true);
-    const isToday = (dt.toISOString().slice(0,10) === todayKey);
+
+    // best-effort "today" (match if the date string starts with today's ISO or parses to today)
+    const dstr = e.datetime || "";
+    let isToday = dstr.startsWith(todayISO);
+    if (!isToday){
+      const dt = new Date(dstr);
+      if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
+    }
     if (isToday){ li.classList.add('today'); todays++; }
 
     li.querySelector('.title').textContent = e.title;
@@ -215,13 +210,16 @@ function renderItems(items, {cached=false}={}){
     const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
     if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
 
-    li.querySelector('.when').textContent = `${monthDay(dt)} at ${hhmm(dt)}`;
+    // show the raw date string if Date parsing fails
+    const dtTry = new Date(dstr);
+    const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
+    li.querySelector('.when').textContent = whenText;
+
     li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
     list.appendChild(li);
   }
 
-  const cachedText = cached ? ' (cached)' : '';
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).${cachedText}`;
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).` + (cached ? ' (cached)' : '');
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 
   err.hidden = items.length !== 0;
@@ -230,39 +228,30 @@ function renderItems(items, {cached=false}={}){
 
 // ===== main =====
 (async function(){
-  const list = document.getElementById('list');
-  const note = document.getElementById('note');
-  const err  = document.getElementById('err');
-
-  // 1) Try to show cached immediately (better UX)
+  // 1) show cache immediately if present
   const cached = loadCache();
-  if (cached && Array.isArray(cached.items) && cached.items.length){
-    renderItems(cached.items, {cached:true});
-  }
+  if (cached?.items?.length) render(cached.items, {cached:true});
 
-  // 2) Fetch fresh from mirrors via proxy
+  // 2) fetch fresh via mirrors
   try{
-    const ffUrls = [
+    const urls = [
       `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.xml")}`,
       `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.xml")}`,
       `${WORKER}/?url=${encodeURIComponent("https://cdn-nfs.faireconomy.media/ff_calendar_this.xml")}`,
     ];
-    const xml = await fetchTextWithRetry(ffUrls, 2);
+    const xml = await fetchTextWithRetry(urls, 2);
     const items = parseFF(xml);
 
     if (items.length){
       saveCache(items);
-      renderItems(items, {cached:false});
-    } else if (!cached){
-      // nothing fresh and no cache shown yet
-      list.innerHTML = '';
-      note.textContent = 'Showing 0 high-impact USD events today (highlighted).';
-      err.hidden = false;
-      err.textContent = 'No USD high-impact events found.';
+      render(items, {cached:false});
+    } else if (!cached?.items?.length){
+      render([], {cached:false});
     }
   }catch(e){
-    if (!cached){
-      note.textContent = '';
+    if (!cached?.items?.length){
+      const err = document.getElementById('err');
+      document.getElementById('note').textContent = '';
       err.hidden = false;
       err.textContent = 'Could not load from proxy: ' + (e.message || e);
     }
