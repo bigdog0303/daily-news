@@ -3,30 +3,35 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>High-impact USD events</title>
+<title>High-impact USD — This Week</title>
+
+<!-- iOS/Safari dark status area -->
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<style>
-html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
-:root{--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;--panel:#121316;--panel2:#17181c;--ring:#2a2b31;--badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;--accent-ring:#5a4b13;--high:#c63b3b;--good:#22c55e;--bad:#ef4444}
-body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text)}
-header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
-h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.small{color:var(--muted);font-size:12px}
-.tabs{display:flex;gap:10px;margin:10px 0 0}
-.tab{border:1px solid var(--ring);background:var(--panel2);color:var(--text);padding:8px 14px;border-radius:999px;cursor:pointer}
-.tab.active{outline:1px solid var(--accent-ring);background:var(--accent-ink);color:#ffe899}
-main{max-width:980px;margin:0 auto;padding:14px 12px 60px}
-.note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
-.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
-.err{color:#ff9b9b;margin-top:8px;text-align:center}
 
-/* list cards */
+<style>
+/* ---- Base -------------------------------------------------------------- */
+html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+:root{
+  --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
+  --panel:#121316;--panel2:#17181c;--ring:#2a2b31;
+  --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
+  --accent-ring:#5a4b13;--high:#c63b3b;
+}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
+.statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
+/* ---- Header ------------------------------------------------------------ */
+header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
+h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.small{color:var(--muted);font-size:12px}
+main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
+/* ---- Cards/List -------------------------------------------------------- */
+.note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
 ul{list-style:none;margin:0;padding:0}
 .item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .left{width:8px;background:var(--ring)}
-.item.today .left{background:var(--accent)}
 .content{flex:1;padding:18px 18px 16px}
 .title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
 .badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
@@ -34,253 +39,198 @@ ul{list-style:none;margin:0;padding:0}
 .badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
 .badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
 .when,.meta{font-size:14px;color:var(--muted)}
-.item.today{background:linear-gradient(180deg,rgba(255,216,74,.08), rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
-
-/* heatbar */
-.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px}
+.when{margin-bottom:6px}
+.item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
+.item.today .left{background:var(--accent)}
+.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+.err{color:#ff9b9b;margin-top:8px;text-align:center}
+/* ---- Heatbar (US30) ---------------------------------------------------- */
+.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:8px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
-.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
-.heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
+.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
+.heatmini .bar{position:relative;width:110px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
 .heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
 .heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
 .heatmini .fill.pos{left:50%;background:#1f5d2f}
 .heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
-
-/* calendar */
-.cal-wrap{margin-top:10px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.cal-day{aspect-ratio:1/1;border:1px solid var(--ring);border-radius:12px;background:var(--panel2);position:relative;display:flex;align-items:flex-start;justify-content:flex-start;padding:8px;font-size:12px;color:var(--muted);cursor:pointer}
-.cal-day .dot{position:absolute;left:8px;bottom:8px;width:8px;height:8px;border-radius:50%;background:#666}
-.cal-day .dot.high{background:var(--high)}
-.cal-day .num{font-weight:700;color:#cfcfd6}
-.cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:10px 0 8px;color:var(--muted);font-size:12px;text-align:center}
-.sheet{margin-top:16px;border:1px solid var(--ring);background:var(--panel2);border-radius:14px;padding:12px;color:#c9cad1;text-align:center}
-.hide{display:none}
 </style>
 </head>
 <body>
+<div class="statusbar" aria-hidden="true"></div>
+
 <header class="top">
   <div class="small" id="now"></div>
   <h1>
-    High-impact USD events
-    <div class="heatmini">
+    High-impact USD events for this week.
+    <span class="heatmini">
       <span class="badge">US30</span>
-      <div class="bar"><div class="zero"></div><div id="hbFill" class="fill"></div></div>
+      <span class="bar">
+        <span class="zero"></span>
+        <span id="hbFill" class="fill"></span>
+      </span>
       <span id="hbVal" class="val">+0.00%</span>
-    </div>
+    </span>
   </h1>
-  <div class="tabs">
-    <button id="tabList" class="tab active">This Week</button>
-    <button id="tabMonth" class="tab">Full Month</button>
-  </div>
   <div class="small" id="updated"></div>
 </header>
 
 <main>
   <div class="note" id="note">Loading…</div>
-
-  <section id="viewList">
-    <ul id="list"></ul>
-    <div class="err" id="errList" hidden></div>
-  </section>
-
-  <section id="viewMonth" class="hide">
-    <div class="cal-wrap">
-      <div class="cal-head">
-        <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-      </div>
-      <div id="cal" class="cal-grid"></div>
-      <div id="daySheet" class="sheet">Tap a day to see events.</div>
-    </div>
-    <div class="err" id="errMonth" hidden></div>
-  </section>
-
-  <div class="footer">Data via ForexFactory</div>
+  <ul id="list"></ul>
+  <div class="err" id="err" hidden></div>
+  <div class="footer">Data via ForexFactory (proxied)</div>
 </main>
 
+<template id="row">
+  <li class="item">
+    <div class="left"></div>
+    <div class="content">
+      <h3 class="title"></h3>
+      <div class="badges"></div>
+      <div class="when"></div>
+      <div class="meta"></div>
+    </div>
+  </li>
+</template>
+
 <script>
-const WORKER_LIST = "https://green-haze-8240.mikaelalexiou.workers.dev";
-const WORKER_CAL  = "https://holy-sun-97e7.mikaelalexiou.workers.dev";
+/* ============================== CONFIG =============================== */
+const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your worker
+const CACHE_KEY = "ff_usd_high_cache_v2";
 
-const CACHE_WEEK = "ff_cache_week_v1";
-const CACHE_MONTH = "ff_cache_month_v1";
+/* Seed (so page never looks empty if source is temporarily down) */
+const SEED_ITEMS = [
+  { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", actual:"" },
+  { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", actual:"" },
+  { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", actual:"" },
+];
 
-const fmtHM = d=> new Intl.DateTimeFormat([], {hour:'2-digit',minute:'2-digit'}).format(d);
-const fmtMD = d=> new Intl.DateTimeFormat([], {month:'short',day:'2-digit'}).format(d);
-document.getElementById('now').textContent = fmtHM(new Date());
+/* ============================== Helpers ============================== */
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
+function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
+const fD = new Intl.DateTimeFormat([], {month:"short", day:"2-digit"});
+const fT = new Intl.DateTimeFormat([], {hour:"2-digit", minute:"2-digit"});
 
-const tabList = document.getElementById('tabList');
-const tabMonth = document.getElementById('tabMonth');
-const viewList = document.getElementById('viewList');
-const viewMonth = document.getElementById('viewMonth');
-function setTab(which){
-  if(which==='list'){ tabList.classList.add('active'); tabMonth.classList.remove('active'); viewList.classList.remove('hide'); viewMonth.classList.add('hide'); loadList(); }
-  else{ tabMonth.classList.add('active'); tabList.classList.remove('active'); viewMonth.classList.remove('hide'); viewList.classList.add('hide'); loadMonth(); }
-}
-tabList.onclick = ()=> setTab('list');
-tabMonth.onclick = ()=> setTab('month');
-
-/* Heatbar */
+/* ============================== Heatbar ============================== */
 function setUS30Pct(pct){
-  const val = document.getElementById('hbVal');
-  const fill = document.getElementById('hbFill');
-  const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
-  fill.classList.remove('pos','neg');
-  if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
-  else{fill.classList.add('neg');val.style.color='#ef4444';}
-  fill.style.width = w.toFixed(2)+'%';
-  val.textContent = (pct>=0?'+':'')+pct.toFixed(2)+'%';
+  const val = document.getElementById("hbVal");
+  const fill = document.getElementById("hbFill");
+  if(!val || !fill) return;
+
+  const CAP = 2;                               // clamp +/- 2%
+  const mag = Math.min(Math.abs(pct), CAP);
+  const half = 50;                             // half bar is 50%
+  const width = (mag / CAP) * half;
+
+  fill.classList.remove("pos","neg");
+  if (pct >= 0){ fill.classList.add("pos"); val.style.color = "#22c55e"; }
+  else         { fill.classList.add("neg"); val.style.color = "#ef4444"; }
+
+  fill.style.width = width.toFixed(2) + "%";
+  val.textContent = (pct>=0?"+":"") + pct.toFixed(2) + "%";
 }
+
 async function fetchUS30(){
   try{
-    const yUrl = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?interval=1m');
-    const r = await fetch(`${WORKER_LIST}/?url=${yUrl}`, {cache:'no-store'});
-    if(!r.ok) return;
+    const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?interval=1m");
+    const r = await fetch(`${WORKER}/?url=${target}`, { cache:"no-store" });
+    if(!r.ok) throw new Error("heatbar http "+r.status);
     const data = await r.json();
     const meta = data.chart?.result?.[0]?.meta;
-    if(meta){
-      const last = meta.regularMarketPrice, prev = meta.chartPreviousClose;
-      if(last && prev) setUS30Pct(((last-prev)/prev)*100);
+    const last = meta?.regularMarketPrice;
+    const prev = meta?.chartPreviousClose;
+    if (last && prev){
+      setUS30Pct(((last - prev) / prev) * 100);
     }
-  }catch{}
+  }catch(_){ /* keep silent; leave previous value */ }
 }
-fetchUS30(); setInterval(fetchUS30, 60000);
 
-/* Cache helpers */
-function saveCache(k, items){ try{ localStorage.setItem(k, JSON.stringify({ts:Date.now(), items})) }catch{} }
-function loadCache(k){ try{ return JSON.parse(localStorage.getItem(k)||"null") }catch{ return null } }
+/* Update heatbar immediately and then every 60s (429-safe cadence) */
+fetchUS30();
+setInterval(fetchUS30, 60_000);
 
-/* WEEK LIST */
-async function loadList(){
-  const note = document.getElementById('note');
-  const err  = document.getElementById('errList');
-  const list = document.getElementById('list');
-  note.textContent="Loading…"; err.hidden=true; list.innerHTML='';
+/* ============================== Render =============================== */
+function render(items, {cached=false, staleNote=""}={}){
+  const list = document.getElementById("list");
+  const note = document.getElementById("note");
+  const err  = document.getElementById("err");
 
-  let items = [];
-  try{
-    items = await fetchJSON(WORKER_LIST);
-  }catch{}
-
-  if(!items.length){
-    // one retry
-    try{ items = await fetchJSON(WORKER_LIST); }catch{}
-  }
-
-  if(!items.length){
-    const c = loadCache(CACHE_WEEK);
-    if(c?.items?.length){ items = c.items; note.textContent='Showing cached data.'; }
-  }
-
-  if(!items.length){
-    note.textContent=''; err.hidden=false; err.textContent='No data.'; return;
-  }
-
-  saveCache(CACHE_WEEK, items);
-  renderList(items);
-  note.textContent = `Showing ${countToday(items)} event(s) today.`;
-  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-}
-function countToday(items){
-  const iso = new Date().toISOString().slice(0,10);
-  return items.filter(x=> (x.datetime||'').slice(0,10)===iso).length;
-}
-function renderList(items){
-  const list = document.getElementById('list');
-  list.innerHTML='';
+  list.innerHTML = "";
+  const tpl = document.getElementById("row");
   const todayISO = new Date().toISOString().slice(0,10);
+  let todays = 0;
+
   for(const e of items){
-    const isToday = (e.datetime||'').slice(0,10)===todayISO;
-    const li = document.createElement('li');
-    li.className = 'item' + (isToday?' today':'');
-    li.innerHTML = `
-      <div class="left"></div>
-      <div class="content">
-        <h3 class="title">${escapeHtml(e.title||'')}</h3>
-        <div class="badges">
-          <span class="badge">USD</span>
-          <span class="badge high">High</span>
-          ${isToday?'<span class="badge today">Today</span>':''}
-        </div>
-        <div class="when">${fmtMD(new Date(e.datetime))} at ${fmtHM(new Date(e.datetime))}</div>
-        <div class="meta">${e.actual?('Impact: High · '+escapeHtml(e.actual)):'Impact: High'}</div>
-      </div>`;
+    const li = tpl.content.firstElementChild.cloneNode(true);
+
+    let isToday = false;
+    if (typeof e.datetime === "string"){
+      isToday = e.datetime.startsWith(todayISO);
+      if (!isToday){
+        const dt = new Date(e.datetime);
+        if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
+      }
+    }
+    if (isToday){ li.classList.add("today"); todays++; }
+
+    li.querySelector(".title").textContent = e.title ?? "Event";
+
+    const badges = li.querySelector(".badges");
+    const b1 = document.createElement("span"); b1.className = "badge"; b1.textContent = "USD"; badges.appendChild(b1);
+    const b2 = document.createElement("span"); b2.className = "badge high"; b2.textContent = "High"; badges.appendChild(b2);
+    if (isToday){ const b3=document.createElement("span"); b3.className="badge today"; b3.textContent="Today"; badges.appendChild(b3); }
+
+    const dt = new Date(e.datetime);
+    const when = isNaN(dt) ? (e.datetime||"") : `${fD.format(dt)} at ${fT.format(dt)}`;
+    li.querySelector(".when").textContent = when;
+    li.querySelector(".meta").textContent = e.actual ? `Impact: High · ${e.actual}` : "Impact: High";
+
     list.appendChild(li);
   }
+
+  const suffix = staleNote || (cached ? " (cached)" : "");
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?"":"s"} today (highlighted).` + suffix;
+  document.getElementById("updated").textContent = "Updated: " + new Date().toLocaleString();
+
+  err.hidden = items.length !== 0;
+  if(items.length === 0) err.textContent = "No USD high-impact events found.";
 }
 
-/* MONTH CALENDAR */
-async function loadMonth(){
-  const note = document.getElementById('note');
-  const err  = document.getElementById('errMonth');
-  const cal  = document.getElementById('cal');
-  const sheet= document.getElementById('daySheet');
-  note.textContent="Loading…"; err.hidden=true; cal.innerHTML=''; sheet.textContent='Tap a day to see events.';
+/* ============================== Main ================================ */
+document.getElementById("now").textContent =
+  new Intl.DateTimeFormat([], {hour:"2-digit", minute:"2-digit"}).format(new Date());
 
-  let items = [];
-  try{ items = await fetchJSON(WORKER_CAL); }catch{}
-  if(!items.length){ try{ items = await fetchJSON(WORKER_CAL); }catch{} }
-  if(!items.length){
-    const c = loadCache(CACHE_MONTH);
-    if(c?.items?.length){ items = c.items; note.textContent='Showing cached month.'; }
-  }
-  if(!items.length){
-    note.textContent='No monthly events found.'; err.hidden=false; err.textContent='No monthly events found.'; return;
-  }
+(async function(){
+  let used = false;
 
-  saveCache(CACHE_MONTH, items);
-  buildCalendar(items, cal, sheet);
-  note.textContent = `Month loaded (${items.length} events).`;
-  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-}
+  // (1) Try your Worker root (expected JSON: { ok, items, stale? })
+  try{
+    const r = await fetch(WORKER, { cache:"no-store" });
+    if (r.ok){
+      const payload = await r.json();
+      if (payload && Array.isArray(payload.items) && payload.items.length){
+        saveCache(payload.items);
+        render(payload.items, { cached:false, staleNote: payload.stale ? " (cached)" : "" });
+        used = true;
+      }
+    }
+  }catch(_){}
 
-function buildCalendar(items, cal, sheet){
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
-  const first = new Date(y, m, 1);
-  const last  = new Date(y, m+1, 0);
-  const startMondayOffset = ((first.getDay()+6)%7);
-  const totalDays = startMondayOffset + last.getDate();
-  const cells = Math.ceil(totalDays/7)*7;
-
-  const byDay = new Map();
-  for(const e of items){
-    const d = (e.datetime||'').slice(0,10);
-    if(!d) continue;
-    if(!byDay.has(d)) byDay.set(d, []);
-    byDay.get(d).push(e);
+  // (2) Fallback to local cache
+  if(!used){
+    const c = loadCache();
+    if (c?.items?.length){
+      render(c.items, { cached:true });
+      used = true;
+    }
   }
 
-  cal.innerHTML='';
-  const monthKey = `${y}-${String(m+1).padStart(2,'0')}`;
-  for(let i=0;i<cells;i++){
-    const cell = document.createElement('div');
-    cell.className='cal-day';
-    const dayNum = i - startMondayOffset + 1;
-    const inMonth = dayNum>=1 && dayNum<=last.getDate();
-    if(inMonth){
-      const iso = `${monthKey}-${String(dayNum).padStart(2,'0')}`;
-      const arr = byDay.get(iso)||[];
-      cell.innerHTML = `<span class="num">${dayNum}</span>${arr.length?'<span class="dot high"></span>':''}`;
-      cell.onclick = ()=>{
-        if(arr.length){
-          sheet.innerHTML = arr.map(ev=> `<div><strong>${escapeHtml(ev.title||'')}</strong> — ${fmtHM(new Date(ev.datetime))}</div>`).join('');
-        }else{ sheet.textContent='No events for this day.'; }
-      };
-    }else{ cell.style.opacity=.35; cell.style.pointerEvents='none'; }
-    cal.appendChild(cell);
+  // (3) Final fallback: seeds
+  if(!used){
+    render(SEED_ITEMS, { cached:true, staleNote:" (seed)" });
   }
-}
-
-async function fetchJSON(u){
-  const r = await fetch(u, {cache:'no-store'});
-  if(!r.ok) throw new Error(r.status);
-  const p = await r.json();
-  return p.items || [];
-}
-function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-
-setTab('list');
+})();
 </script>
 </body>
 </html>
