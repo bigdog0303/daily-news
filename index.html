@@ -40,7 +40,8 @@ ul{list-style:none;margin:0;padding:0}
 /* heatbar */
 .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
-.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
+.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:58px;text-align:right}
+.heatmini .src{font-size:11px;color:#8b8c93;margin-left:6px}
 .heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
 .heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
 .heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
@@ -60,7 +61,8 @@ ul{list-style:none;margin:0;padding:0}
         <div class="zero"></div>
         <div id="hbFill" class="fill"></div>
       </div>
-      <span id="hbVal" class="val">+0.00%</span>
+      <span id="hbVal" class="val">—</span>
+      <span id="hbSrc" class="src"></span>
     </div>
   </h1>
   <div class="small" id="updated"></div>
@@ -89,7 +91,7 @@ ul{list-style:none;margin:0;padding:0}
 const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev";
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Fallback seed
+// Fallback seed (so you always see something)
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -103,49 +105,80 @@ function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
 // ===== Heatbar =====
-function setUS30Pct(pct){
+function setUS30Pct(pct, sourceLabel){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
+  const src=document.getElementById('hbSrc');
   if(!val||!fill) return;
+
   const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
   fill.classList.remove('pos','neg');
   if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
   else{fill.classList.add('neg');val.style.color='#ef4444';}
   fill.style.width=w.toFixed(2)+'%';
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+  src.textContent = sourceLabel ? `· ${sourceLabel}` : '';
 }
 
-let hbInterval = 180000; // 3m (backs off on error)
+let hbInterval = 180000; // 3m, backs off on error
 async function fetchUS30(){
-  try{
-    const yahoo = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI";
-    const target = encodeURIComponent(yahoo);
-    const url = `${WORKER}/?url=${target}`;
-    const res = await fetch(url, { cache: "no-store" });
-    if(!res.ok) throw new Error("not ok");
+  // Try 1: Yahoo quote ^DJI
+  const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`, "DJI quote");
+  if (pct1 != null) { setUS30Pct(pct1, "DJI"); scheduleNext(true); return; }
 
-    const data = await res.json();
-    const q = data?.quoteResponse?.result?.[0];
+  // Try 2: Yahoo chart ^DJI derive %
+  const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`, "DJI chart");
+  if (pct2 != null) { setUS30Pct(pct2, "DJI*"); scheduleNext(true); return; }
 
-    if (q && typeof q.regularMarketChangePercent === "number") {
-      setUS30Pct(q.regularMarketChangePercent);
-      hbInterval = 180000;
-    } else if (q && typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
-      const pct = ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
-      setUS30Pct(pct);
-      hbInterval = 180000;
-    } else {
-      // Worker may have returned {ok:false}; ignore silently
-    }
-  }catch(e){
-    hbInterval = Math.min(hbInterval * 1.7, 15 * 60 * 1000);
-  } finally {
-    setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
-  }
+  // Try 3: DIA ETF as proxy
+  const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`, "DIA quote");
+  if (pct3 != null) { setUS30Pct(pct3, "DIA"); scheduleNext(true); return; }
+
+  // All failed: backoff and try later (leave value unchanged)
+  scheduleNext(false);
 }
+
+function scheduleNext(success){
+  hbInterval = success ? 180000 : Math.min(hbInterval * 1.7, 15*60*1000);
+  setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
+}
+
+async function getPctVia(url, label){
+  try{
+    const r = await fetch(url, { cache: "no-store" });
+    if(!r.ok) return null;
+    const data = await r.json();
+    // Worker returns {ok:false,...} on upstream fail; guard it
+    const q = data?.quoteResponse?.result?.[0];
+    if (!q) return null;
+    if (typeof q.regularMarketChangePercent === "number") return q.regularMarketChangePercent;
+    if (typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
+      return ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
+    }
+    return null;
+  }catch(_){ return null; }
+}
+
+async function getPctFromChart(url, label){
+  try{
+    const r = await fetch(url, { cache: "no-store" });
+    if(!r.ok) return null;
+    const data = await r.json();
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+    const last = meta.regularMarketPrice ?? meta.previousClose;
+    const prev = meta.chartPreviousClose ?? meta.previousClose;
+    if (typeof last === "number" && typeof prev === "number" && prev !== 0) {
+      return ((last - prev) / prev) * 100;
+    }
+    return null;
+  }catch(_){ return null; }
+}
+
+// kick off
 fetchUS30();
 
-// ===== render =====
+// ===== render (news list) =====
 function render(items){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
@@ -181,7 +214,7 @@ function render(items){
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 }
 
-// ===== main =====
+// ===== main (news) =====
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
