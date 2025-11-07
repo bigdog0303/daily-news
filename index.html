@@ -36,7 +36,7 @@ ul{list-style:none;margin:0;padding:0}
 .item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
 .item.today .left{background:var(--accent)}
 .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
-.err{color:#ff9b9b;margin-top:8px;text-align:center}
+
 /* heatbar */
 .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
@@ -52,7 +52,8 @@ ul{list-style:none;margin:0;padding:0}
 <div class="statusbar" aria-hidden="true"></div>
 <header class="top">
   <div class="small" id="now"></div>
-  <h1>High-impact USD events for this week.
+  <h1>
+    High-impact USD events for this week.
     <div class="heatmini">
       <span class="badge">US30</span>
       <div class="bar">
@@ -68,7 +69,6 @@ ul{list-style:none;margin:0;padding:0}
 <main>
   <div class="note" id="note">Loading…</div>
   <ul id="list"></ul>
-  <div class="err" id="err" hidden></div>
   <div class="footer">Data via ForexFactory (proxied)</div>
 </main>
 
@@ -86,11 +86,10 @@ ul{list-style:none;margin:0;padding:0}
 
 <script>
 // ===== CONFIG =====
-// IMPORTANT: plain URL (no Markdown brackets)
-const WORKER = "https://proud-rice-2425.mikaelalexiou.workers.dev"; // or switch to your other worker URL
+const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your new worker
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Seed items (so you ALWAYS see something)
+// Seed items (fallback so the page isn't blank if feed is temporarily empty)
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -118,11 +117,10 @@ function setUS30Pct(pct){
 }
 async function fetchUS30(){
   try{
-    // IMPORTANT: plain URL, then encode
     const yahoo = "https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m";
     const target = encodeURIComponent(yahoo);
     const url = `${WORKER}/?url=${target}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if(!res.ok) return;
     const data = await res.json();
     const meta = data.chart?.result?.[0]?.meta;
@@ -137,13 +135,12 @@ async function fetchUS30(){
   }catch(e){}
 }
 fetchUS30();
-setInterval(fetchUS30, 60000); // 1 minute
+setInterval(fetchUS30, 180000); // every 3 minutes (kinder to Yahoo)
 
 // ===== render =====
-function render(items, {cached=false, staleLabel=""}={}){
+function render(items){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
-  const err  = document.getElementById('err');
 
   list.innerHTML = '';
   const tpl = document.getElementById('row');
@@ -176,12 +173,8 @@ function render(items, {cached=false, staleLabel=""}={}){
     list.appendChild(li);
   }
 
-  const tag = staleLabel || (cached ? " (cached)" : "");
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).${tag}`;
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-
-  err.hidden = items.length !== 0;
-  if(items.length === 0) err.textContent = 'No USD high-impact events found.';
 }
 
 // ===== main =====
@@ -189,33 +182,31 @@ document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
 (async function(){
-  // 1) Try Worker ROOT (JSON with cache server-side)
-  let used = false;
+  let items = [];
+
+  // 1) Try Worker (fresh)
   try{
-    const r = await fetch(WORKER, {cache:"no-store"});
+    const r = await fetch(WORKER, { cache: "no-store" });
     if (r.ok){
       const payload = await r.json();
-      if (payload && payload.items && payload.items.length){
-        saveCache(payload.items);
-        render(payload.items, {cached:false, staleLabel: payload.stale ? " (cached)" : ""});
-        used = true;
-      }
+      if (payload && payload.items) items = payload.items;
     }
   }catch(_){}
 
-  // 2) Use local cache if worker returned nothing
-  if (!used){
+  // 2) Fallback to cache
+  if (!items.length){
     const c = loadCache();
-    if (c?.items?.length){
-      render(c.items, {cached:true});
-      used = true;
-    }
+    if (c?.items?.length) items = c.items;
   }
 
-  // 3) Last resort: seed items (the “old ones”)
-  if (!used){
-    render(SEED_ITEMS, {cached:true, staleLabel:" (seed)"});
+  // 3) Last resort: seed
+  if (!items.length){
+    items = SEED_ITEMS;
+  } else {
+    saveCache(items);
   }
+
+  render(items);
 })();
 </script>
 </body>
