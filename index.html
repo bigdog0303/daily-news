@@ -111,19 +111,18 @@ ul{list-style:none;margin:0;padding:0}
 </template>
 
 <script>
-/* ====== CONFIG ====== */
+/* ===== CONFIG ===== */
 const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your Worker
-const CACHE_KEY = "ff_usd_cache_v2";
+const CACHE_KEY = "ff_usd_cache_v3";
 
-/* ====== helpers ====== */
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+/* ===== helpers ===== */
 function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(),items})); }catch{} }
 function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
 const fmtTime = (d)=> new Intl.DateTimeFormat([], {hour:'2-digit',minute:'2-digit'}).format(d);
 const fmtMonthLabel = (y,m)=> new Date(y,m-1,1).toLocaleDateString([], {month:'long', year:'numeric'});
 const fmtMD = (d)=> d.toLocaleDateString([], {month:'short', day:'2-digit'});
 
-/* ====== US30 mini heatbar via Worker Yahoo proxy ====== */
+/* ===== US30 mini heatbar ===== */
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -149,8 +148,8 @@ async function fetchUS30(){
 }
 fetchUS30(); setInterval(fetchUS30, 60000);
 
-/* ====== list renderer ====== */
-function renderList(items, noteTag=""){
+/* ===== renderers ===== */
+function renderList(items, tag=""){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   const err  = document.getElementById('err');
@@ -162,7 +161,7 @@ function renderList(items, noteTag=""){
 
   for (const e of items){
     const li = tpl.content.firstElementChild.cloneNode(true);
-    let dstr = e.datetime || `${e.date||''} ${e.time||''}`.trim();
+    const dstr = e.datetime || `${e.date||''} ${e.time||''}`.trim();
     const dt = new Date(dstr);
     const isToday = !isNaN(dt) && dt.toISOString().slice(0,10)===todayISO;
     if(isToday){ li.classList.add('today'); todays++; }
@@ -178,19 +177,20 @@ function renderList(items, noteTag=""){
     list.appendChild(li);
   }
 
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today.` + (noteTag?' '+noteTag:'');
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today.` + (tag?' '+tag:'');
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 
-  document.getElementById('err').hidden = items.length!==0;
-  if(items.length===0) document.getElementById('err').textContent='No USD high-impact events found.';
+  err.hidden = items.length!==0;
+  if(items.length===0) err.textContent='No USD high-impact events found.';
 }
 
-/* ====== calendar renderer ====== */
-function renderCalendar(allItems, ym){ // ym: "YYYY-MM"
+function renderCalendar(allItems, ym){
   const [Y,M] = ym.split('-').map(n=>+n);
   document.getElementById('cal-month').textContent = fmtMonthLabel(Y,M);
 
-  // filter to month (server might have given aliases)
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML='';
+
   const start = new Date(Y,M-1,1);
   const end   = new Date(Y,M,0,23,59,59);
   const items = allItems.filter(e=>{
@@ -198,22 +198,14 @@ function renderCalendar(allItems, ym){ // ym: "YYYY-MM"
     return !isNaN(t) && t>=start && t<=end;
   });
 
-  const grid = document.getElementById('cal-grid');
-  grid.innerHTML='';
-
-  // Build Mon–Sun grid starting at Monday
   const first = new Date(Y,M-1,1);
   const last  = new Date(Y,M,0);
-  const offset = (first.getDay()+6)%7; // Monday=0
-  const totalDays = last.getDate();
+  const offset = (first.getDay()+6)%7; // Mon=0
 
-  // Leading blanks
   for(let i=0;i<offset;i++){
     const c = document.createElement('div'); c.className='cal-cell empty'; grid.appendChild(c);
   }
-
-  // Days
-  for(let d=1; d<=totalDays; d++){
+  for(let d=1; d<=last.getDate(); d++){
     const cell = document.createElement('div'); cell.className='cal-cell';
     const label = document.createElement('div'); label.className='cal-date'; label.textContent = d;
     cell.appendChild(label);
@@ -235,16 +227,14 @@ function renderCalendar(allItems, ym){ // ym: "YYYY-MM"
   }
 }
 
-/* ====== data fetchers ====== */
+/* ===== data ===== */
 async function fetchAliases(){
-  // worker root returns aliases-merge
   const r = await fetch(WORKER, {cache:'no-store'});
   if(!r.ok) throw new Error('worker not ok');
   return await r.json();
 }
-
 async function fetchMonth(ym){
-  // Try worker month first
+  // Try worker month
   try{
     const r = await fetch(`${WORKER}?month=${ym}`, {cache:'no-store'});
     if(r.ok){
@@ -252,12 +242,12 @@ async function fetchMonth(ym){
       if (Array.isArray(p.items) && p.items.length) return {items:p.items, tag:"(month)"};
     }
   }catch{}
-  // Fallback: aliases then client filter
+  // Fallback: aliases
   const p = await fetchAliases();
   return {items:p.items||[], tag:"(filtered)"};
 }
 
-/* ====== tabs ====== */
+/* ===== tabs ===== */
 function showList(){ 
   document.getElementById('tab-list').classList.add('active');
   document.getElementById('tab-cal').classList.remove('active');
@@ -271,9 +261,25 @@ function showCal(){
   document.getElementById('cal-view').style.display='';
 }
 
-/* ====== boot ====== */
-document.getElementById('now').textContent = fmtTime(new Date());
+/* ===== boot ===== */
+document.getElementById('now').textContent =
+  new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
+// Load LIST immediately
+(async function loadListFirst(){
+  showList();
+  try{
+    const p = await fetchAliases();
+    const items = p.items||[];
+    saveCache(items);
+    renderList(items);
+  }catch(e){
+    const c = loadCache();
+    renderList(c?.items||[], '(cached)');
+  }
+})();
+
+// Tab handlers
 document.getElementById('tab-list').onclick = async ()=>{
   showList();
   try{
@@ -289,17 +295,11 @@ document.getElementById('tab-list').onclick = async ()=>{
 
 document.getElementById('tab-cal').onclick = async ()=>{
   showCal();
-  const ym = new Date().toISOString().slice(0,7); // current YYYY-MM
+  const ym = new Date().toISOString().slice(0,7);
   try{
     const {items, tag} = await fetchMonth(ym);
-    if(!items.length){
-      const c = loadCache();
-      renderCalendar(c?.items||[], ym);
-      document.getElementById('note').textContent = 'No month feed; showing cached or empty month.';
-    }else{
-      renderCalendar(items, ym);
-      document.getElementById('note').textContent = `Month view ${tag}`;
-    }
+    renderCalendar(items, ym);
+    document.getElementById('note').textContent = `Month view ${tag}`;
     document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
   }catch{
     const c = loadCache();
@@ -307,9 +307,6 @@ document.getElementById('tab-cal').onclick = async ()=>{
     document.getElementById('note').textContent = 'Month view (cached)';
   }
 };
-
-/* default: List on load */
-document.getElementById('tab-list').click();
 </script>
 </body>
 </html>
