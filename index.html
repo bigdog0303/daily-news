@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
 html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
-:root{--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;--panel:#121316;--panel2:#17181c;--ring:#2a2b31;--badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;--accent-ring:#5a4b13;--high:#e44;--ok:#22c55e}
+:root{--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;--panel:#121316;--panel2:#17181c;--ring:#2a2b31;--badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;--accent-ring:#5a4b13;--high:#e44;}
 body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
 header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
 h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -20,69 +20,36 @@ h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:fle
 main{max-width:980px;margin:0 auto;padding:14px 12px 40px}
 .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
 ul{list-style:none;margin:0;padding:0}
-.item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
-.left{width:8px;background:var(--ring)}
-.content{flex:1;padding:18px 18px 16px}
-.title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
-.badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--badge);border:1px solid var(--ring);font-size:12px;color:#d7d7dc}
-.badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
-.badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
-.when,.meta{font-size:14px;color:var(--muted)}
-.when{margin-bottom:6px}
-.item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
-.item.today .left{background:var(--accent)}
 .footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
-.err{color:#ff9b9b;margin-top:8px;text-align:center}
-
-/* heatbar */
-.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
-.heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
-.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
-.heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
-.heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
-.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
-.heatmini .fill.pos{left:50%;background:#1f5d2f}
-.heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
 
 /* calendar */
-.cal-wrap{display:none}
-.cal-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
-.cal-month{font-weight:800;letter-spacing:.3px}
+#cal-wrap{display:none}
+.cal-head{display:flex;align-items:center;justify-content:center;margin:10px 0 6px;font-weight:800;font-size:18px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:4px 0 8px}
+.cal-dow div{text-align:center;color:var(--muted);font-size:12px}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:10px 0 8px}
-.cal-dow div{color:var(--muted);font-size:12px;text-align:center}
-.cal-cell{position:relative;border:1px solid var(--ring);background:var(--panel2);border-radius:12px;aspect-ratio:1/1} /* equal squares */
-.cal-date{position:absolute;top:6px;right:8px;font-size:12px;color:#bfc0c7;font-weight:700}
+.cal-cell{position:relative;border:1px solid var(--ring);background:var(--panel2);border-radius:12px;aspect-ratio:1/1}
+.cal-cell.empty{opacity:.3}
+.cal-cell.today{outline:1px solid var(--accent-ring)}
+.cal-date{position:absolute;top:6px;right:8px;font-size:12px;color:#bbb}
 .cal-marker-row{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;flex-wrap:wrap;padding:0 6px}
 .dot{width:8px;height:8px;border-radius:999px;background:var(--high);border:1px solid #6b2e2e}
-.cal-cell.empty{opacity:.5}
-.cal-cell.today{outline:1px solid var(--accent-ring)}
-/* bottom sheet (click day) */
+
+/* bottom sheet */
 .sheet{position:fixed;left:0;right:0;bottom:-100%;background:var(--panel2);border-top:1px solid var(--ring);border-radius:14px 14px 0 0;box-shadow:0 -10px 30px rgba(0,0,0,.4);transition:bottom .25s ease;max-height:70vh;overflow:auto;padding:14px}
 .sheet.open{bottom:0}
 .sheet h3{margin:4px 0 10px;font-size:18px}
 .sheet .event{border:1px solid var(--ring);background:#16171b;border-radius:12px;padding:10px;margin:8px 0}
-.sheet .event .t{font-weight:800;margin:0 0 4px}
-.sheet .event .w{color:var(--muted);font-size:13px}
+.sheet .t{font-weight:800;margin:0 0 4px}
+.sheet .w{color:var(--muted);font-size:13px}
 .sheet .close{position:sticky;top:-4px;float:right;border:1px solid var(--ring);background:#1f2025;color:#ddd;border-radius:999px;padding:6px 10px;cursor:pointer}
-@media (min-width:900px){
-  .cal-grid{gap:10px}
-}
 </style>
 </head>
 
 <body>
 <header class="top">
   <div class="small" id="now"></div>
-  <h1>
-    High-impact USD events
-    <div class="heatmini">
-      <span class="badge">US30</span>
-      <div class="bar"><div class="zero"></div><div id="hbFill" class="fill"></div></div>
-      <span id="hbVal" class="val">+0.00%</span>
-    </div>
-  </h1>
+  <h1>High-impact USD events</h1>
   <div class="tabs">
     <div id="tabList" class="tab active">This Week</div>
     <div id="tabCal" class="tab">Full Month</div>
@@ -93,39 +60,20 @@ ul{list-style:none;margin:0;padding:0}
 <main>
   <div class="note" id="note">Loading…</div>
 
-  <!-- list view -->
-  <section id="list-wrap">
-    <ul id="list"></ul>
-    <div class="err" id="err" hidden></div>
-    <div class="footer">Data via ForexFactory (proxied)</div>
-  </section>
-
-  <!-- calendar view -->
-  <section id="cal-wrap" class="cal-wrap">
-    <div class="cal-head">
-      <div class="cal-month" id="cal-month"></div>
-    </div>
-    <div class="cal-dow">
-      <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-    </div>
+  <!-- calendar -->
+  <section id="cal-wrap">
+    <div class="cal-head" id="cal-month"></div>
+    <div class="cal-dow"><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div></div>
     <div class="cal-grid" id="cal-grid"></div>
     <div class="footer">Tap a day to see events</div>
   </section>
+
+  <!-- list -->
+  <ul id="list"></ul>
+  <div class="footer">Data via ForexFactory</div>
 </main>
 
-<template id="row">
-  <li class="item">
-    <div class="left"></div>
-    <div class="content">
-      <h3 class="title"></h3>
-      <div class="badges"></div>
-      <div class="when"></div>
-      <div class="meta"></div>
-    </div>
-  </li>
-</template>
-
-<!-- bottom sheet -->
+<!-- sheet -->
 <div id="sheet" class="sheet" aria-hidden="true">
   <button class="close" id="sheetClose">Close</button>
   <h3 id="sheetTitle">Events</h3>
@@ -133,196 +81,106 @@ ul{list-style:none;margin:0;padding:0}
 </div>
 
 <script>
-// --------- CONFIG ----------
 const WORKER_LIST = "https://green-haze-8240.mikaelalexiou.workers.dev";
 const WORKER_CAL  = "https://holy-sun-97e7.mikaelalexiou.workers.dev";
-const CACHE_KEY   = "usd_ff_week_cache_v1";
-const SEED = [
-  { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD" },
-  { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD" },
-  { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD" },
-];
 
-// --------- helpers ----------
-function saveCache(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
-function loadCache(k){try{return JSON.parse(localStorage.getItem(k)||"null");}catch{return null}}
-function hhmm(dt){return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt)}
 function md(dt){return dt.toLocaleDateString([], {month:'short', day:'2-digit'})}
+function hhmm(dt){return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt)}
 function monthLabel(y,m){return new Date(y,m-1,1).toLocaleDateString([], {month:'long', year:'numeric'})}
+
 document.getElementById('now').textContent = hhmm(new Date());
 
-// --------- heatbar ----------
-function setUS30Pct(pct){
-  const val=document.getElementById('hbVal'), fill=document.getElementById('hbFill');
-  const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
-  fill.classList.remove('pos','neg');
-  if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
-  else{fill.classList.add('neg');val.style.color='#ef4444';}
-  fill.style.width=w.toFixed(2)+'%';
-  val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
-}
-async function fetchUS30(){
-  try{
-    const url = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?interval=1m");
-    const r = await fetch(`${WORKER_LIST}/?url=${url}`, {cache:'no-store'});
-    const j = await r.json();
-    const meta = j.chart?.result?.[0]?.meta;
-    if(meta){const last=meta.regularMarketPrice, prev=meta.chartPreviousClose; if(last&&prev) setUS30Pct(((last-prev)/prev)*100);}
-  }catch{}
-}
-fetchUS30(); setInterval(fetchUS30, 60000);
-
-// --------- LIST (This Week) ----------
-function renderList(items){
-  const list=document.getElementById('list'); list.innerHTML='';
-  const tpl=document.getElementById('row');
-  const todayISO = new Date().toISOString().slice(0,10);
-  let todays=0;
-  for(const e of items){
-    const dstr=e.datetime||""; const dt=new Date(dstr);
-    const li=tpl.content.firstElementChild.cloneNode(true);
-    const isToday=!isNaN(dt)&&dt.toISOString().slice(0,10)===todayISO;
-    if(isToday){ li.classList.add('today'); todays++; }
-    li.querySelector('.title').textContent=e.title||'Event';
-    const badges=li.querySelector('.badges');
-    const b1=document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-    const b2=document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-    if(isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
-    li.querySelector('.when').textContent = isNaN(dt)? dstr : `${md(dt)} at ${hhmm(dt)}`;
-    li.querySelector('.meta').textContent = e.actual?`Impact: High · ${e.actual}`:'Impact: High';
-    list.appendChild(li);
-  }
-  document.getElementById('note').textContent = `Showing ${todays} events today.`;
-  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
-}
+// ------------- WEEKLY -------------
 async function loadList(){
-  document.getElementById('list-wrap').style.display='';
+  document.getElementById('list').style.display='';
   document.getElementById('cal-wrap').style.display='none';
   document.getElementById('note').textContent='Loading…';
   try{
-    const r=await fetch(WORKER_LIST, {cache:'no-store'});
+    const r=await fetch(WORKER_LIST,{cache:'no-store'});
     const j=await r.json();
-    const items = (Array.isArray(j.items)&&j.items.length)? j.items : (loadCache(CACHE_KEY)||SEED);
-    if(j.items?.length) saveCache(CACHE_KEY, j.items);
-    renderList(items);
-  }catch{
-    const c=loadCache(CACHE_KEY)||SEED; renderList(c);
-  }
+    if(j.items?.length){
+      const list=document.getElementById('list');
+      list.innerHTML='';
+      for(const e of j.items){
+        const li=document.createElement('li');
+        const dt=new Date(e.datetime);
+        li.textContent=`${md(dt)} ${hhmm(dt)} — ${e.title}`;
+        list.appendChild(li);
+      }
+      document.getElementById('note').textContent=`Showing ${j.items.length} events.`;
+    }else document.getElementById('note').textContent="No data.";
+  }catch(e){document.getElementById('note').textContent="Failed to load."}
 }
 
-// --------- CALENDAR (Full Month) ----------
-let MONTH_CACHE = {}; // map YYYY-MM -> items[]
-function startOfMonth(y,m){ return new Date(y,m-1,1); }
-function endOfMonth(y,m){ return new Date(y,m,0); }
-function mondayIndex(d){ return (d.getDay()+6)%7; } // Mon=0..Sun=6
+// ------------- CALENDAR -------------
+function startOfMonth(y,m){return new Date(y,m-1,1)}
+function endOfMonth(y,m){return new Date(y,m,0)}
+function mondayIndex(d){return (d.getDay()+6)%7}
+function groupByDay(items){const map={};for(const e of items){const d=new Date(e.datetime||"");if(isNaN(d))continue;const key=d.toISOString().slice(0,10);(map[key]??=[]).push(e);}return map;}
 
-function groupByDay(items){
-  const map = {};
-  for(const e of items){
-    const dt = new Date(e.datetime||"");
-    if(isNaN(dt)) continue;
-    const key = dt.toISOString().slice(0,10);
-    (map[key] ||= []).push(e);
-  }
-  return map;
-}
-
-function renderCalendar(items, y, m){
-  const monthStr = `${y}-${String(m).padStart(2,'0')}`;
-  document.getElementById('cal-month').textContent = monthLabel(y,m);
-  const grid = document.getElementById('cal-grid'); grid.innerHTML='';
-  const first = startOfMonth(y,m);
-  const last  = endOfMonth(y,m);
-  const offset = mondayIndex(first);
-  const todayISO = new Date().toISOString().slice(0,10);
-  const byDay = groupByDay(items);
-
-  // leading empties
-  for(let i=0;i<offset;i++){
-    const c=document.createElement('div'); c.className='cal-cell empty'; grid.appendChild(c);
-  }
-  // days
-  for(let d=1; d<=last.getDate(); d++){
-    const cell=document.createElement('div'); cell.className='cal-cell';
-    const dayISO = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if(dayISO===todayISO) cell.classList.add('today');
-
-    const dateEl=document.createElement('div'); dateEl.className='cal-date'; dateEl.textContent=d;
-    cell.appendChild(dateEl);
-
-    const row=document.createElement('div'); row.className='cal-marker-row';
-    const evs = byDay[dayISO] || [];
-    // render up to 6 dots (no text)
-    const count = Math.min(evs.length, 6);
-    for(let i=0;i<count;i++){ const dot=document.createElement('div'); dot.className='dot'; row.appendChild(dot); }
+function renderCalendar(items,y,m){
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  document.getElementById('cal-month').textContent=monthLabel(y,m);
+  const first=startOfMonth(y,m), last=endOfMonth(y,m), offset=mondayIndex(first);
+  const byDay=groupByDay(items);
+  const todayISO=new Date().toISOString().slice(0,10);
+  for(let i=0;i<offset;i++){const c=document.createElement('div');c.className='cal-cell empty';grid.appendChild(c);}
+  for(let d=1;d<=last.getDate();d++){
+    const dayISO=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cell=document.createElement('div');cell.className='cal-cell';
+    if(dayISO===todayISO)cell.classList.add('today');
+    const date=document.createElement('div');date.className='cal-date';date.textContent=d;cell.appendChild(date);
+    const row=document.createElement('div');row.className='cal-marker-row';
+    const evs=byDay[dayISO]||[];const dots=Math.min(evs.length,5);
+    for(let i=0;i<dots;i++){const dot=document.createElement('div');dot.className='dot';row.appendChild(dot);}
     cell.appendChild(row);
-
-    // click -> bottom sheet
-    cell.onclick = ()=> openSheet(dayISO, evs);
+    cell.onclick=()=>openSheet(dayISO,evs);
     grid.appendChild(cell);
   }
-
-  document.getElementById('note').textContent = `Tap a day to see events.`;
-  document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+  document.getElementById('note').textContent='Tap a day to see events.';
+  document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
 }
 
 async function loadCalendar(){
-  document.getElementById('list-wrap').style.display='none';
-  document.getElementById('cal-wrap').style.display='';
-  document.getElementById('note').textContent='Loading…';
-
-  const ym = new Date().toISOString().slice(0,7);
-  if (MONTH_CACHE[ym]) { renderCalendar(MONTH_CACHE[ym], +ym.slice(0,4), +ym.slice(5)); return; }
-
+  document.getElementById('list').style.display='none';
+  document.getElementById('cal-wrap').style.display='block';
+  document.getElementById('note').textContent='Loading calendar…';
+  const ym=new Date().toISOString().slice(0,7);
   try{
-    const r = await fetch(`${WORKER_CAL}/?month=${ym}`, {cache:'no-store'});
-    const j = await r.json();
-    const items = (Array.isArray(j.items) && j.items.length) ? j.items : [];
-    // If Worker gave nothing, use weekly cache as a fallback so the grid isn’t empty
-    const fallback = (loadCache(CACHE_KEY) || SEED);
-    MONTH_CACHE[ym] = items.length ? items : fallback;
-    renderCalendar(MONTH_CACHE[ym], +ym.slice(0,4), +ym.slice(5));
-  }catch{
-    const fallback = loadCache(CACHE_KEY) || SEED;
-    MONTH_CACHE[ym] = fallback;
-    renderCalendar(MONTH_CACHE[ym], +ym.slice(0,4), +ym.slice(5));
-  }
+    const r=await fetch(`${WORKER_CAL}/?month=${ym}`);const j=await r.json();
+    if(j.items?.length){const y=+ym.slice(0,4),m=+ym.slice(5);renderCalendar(j.items,y,m);}
+    else document.getElementById('note').textContent='No monthly events found.';
+  }catch(e){document.getElementById('note').textContent='Calendar fetch failed.';}
 }
 
-// --------- Bottom sheet ----------
-const sheet = document.getElementById('sheet');
-const sheetTitle = document.getElementById('sheetTitle');
-const sheetBody = document.getElementById('sheetBody');
-document.getElementById('sheetClose').onclick = ()=>{ sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true'); };
-
-function openSheet(dayISO, events){
-  sheetTitle.textContent = new Date(dayISO).toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
-  sheetBody.innerHTML = '';
-  if(!events || !events.length){
-    const p=document.createElement('p'); p.textContent='No USD High-impact events.';
-    sheetBody.appendChild(p);
-  }else{
-    // sort by time in day
-    events.sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
-    for(const e of events){
-      const dt = new Date(e.datetime||"");
-      const card=document.createElement('div'); card.className='event';
-      const t=document.createElement('div'); t.className='t'; t.textContent = e.title || 'Event';
-      const w=document.createElement('div'); w.className='w'; w.textContent = isNaN(dt)? '' : hhmm(dt) + ' · Impact: High';
-      card.appendChild(t); card.appendChild(w);
-      sheetBody.appendChild(card);
+// ------------- BOTTOM SHEET -------------
+const sheet=document.getElementById('sheet');
+const sheetBody=document.getElementById('sheetBody');
+document.getElementById('sheetClose').onclick=()=>{sheet.classList.remove('open')};
+function openSheet(dayISO,evs){
+  const title=document.getElementById('sheetTitle');
+  title.textContent=new Date(dayISO).toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
+  sheetBody.innerHTML='';
+  if(!evs.length){sheetBody.innerHTML='<p>No events.</p>';}
+  else{
+    evs.sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+    for(const e of evs){
+      const dt=new Date(e.datetime);
+      const div=document.createElement('div');div.className='event';
+      div.innerHTML=`<div class='t'>${e.title}</div><div class='w'>${hhmm(dt)} · Impact: High</div>`;
+      sheetBody.appendChild(div);
     }
   }
-  sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false');
+  sheet.classList.add('open');
 }
 
-// --------- tabs ----------
+// ------------- TABS -------------
 const tabList=document.getElementById('tabList');
-const tabCal =document.getElementById('tabCal');
+const tabCal=document.getElementById('tabCal');
 tabList.onclick=()=>{tabList.classList.add('active');tabCal.classList.remove('active');loadList();}
-tabCal.onclick =()=>{tabCal.classList.add('active');tabList.classList.remove('active');loadCalendar();}
+tabCal.onclick=()=>{tabCal.classList.add('active');tabList.classList.remove('active');loadCalendar();}
 
-// boot
+// start
 loadList();
 </script>
 </body>
