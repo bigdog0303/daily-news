@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FX Dashboard — Standalone</title>
+  <title>FX Dashboard — Green Haze</title>
   <style>
     :root{--bg:#0b0f14;--card:#121821;--text:#e6edf3;--muted:#9fb0c3;--accent:#4ade80;--accent2:#60a5fa;--danger:#f87171}
     *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto}
@@ -13,11 +13,13 @@
     .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
     .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
     .small{color:var(--muted);font-size:12px}
+
     .heat{display:flex;gap:10px;align-items:flex-end;height:120px;margin-top:10px}
     .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
     .bar{width:28px;border-radius:8px;background:linear-gradient(180deg,var(--accent),var(--accent2));transition:height .3s}
     .label{font-size:12px;color:var(--muted)}
     .counts{font-size:11px;color:var(--muted)}
+
     ul{list-style:none;margin:0;padding:0}
     li+li{border-top:1px solid #1f2937}
     .row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:10px 0;align-items:center}
@@ -25,151 +27,70 @@
     .b-high{background:rgba(248,113,113,.15);color:var(--danger)}
     .b-med{background:rgba(96,165,250,.15);color:var(--accent2)}
     .b-low{background:rgba(74,222,128,.15);color:var(--accent)}
-    a.btn{display:inline-block;margin-top:8px;padding:10px 14px;border:1px solid #1f2937;border-radius:12px;color:var(--text);text-decoration:none}
-    .err{color:#fda4af;font-size:12px;margin-top:8px}
   </style>
 </head>
 <body>
-  <header><div class="wrap"><h1>Green Haze — This Week</h1><div class="small">Heat by impact + Upcoming events (direct from ForexFactory)</div></div></header>
+  <header><div class="wrap"><h1>Green Haze</h1><div class="small">Weekly heat + upcoming events</div></div></header>
   <main class="wrap">
     <div class="grid">
       <section class="card">
         <h2 style="margin:0 0 8px 0">Heatbar</h2>
         <div id="heatbar" class="heat"></div>
-        <div id="heatErr" class="err"></div>
       </section>
       <section class="card">
         <h2 style="margin:0 0 8px 0">Next Events</h2>
         <ul id="list"></ul>
-        <div id="listErr" class="err"></div>
-        <a class="btn" href="calendar.html">Open Monthly Calendar →</a>
       </section>
     </div>
   </main>
 
   <script>
-    const SRC = [
-      'https://cdn-nfs.faireconomy.media/ff_calendar_thisweek.json',
-      'https://cdn-nfs.faireconomy.media/ff_calendar_nextweek.json'
-    ];
-    const weekday = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const API_BASE = 'https://green-haze.mikaelalexiou.workers.dev';
 
-    async function fetchTwoWeeks(){
-      const out = [];
-      for (const u of SRC){
-        try{
-          const r = await fetch(u, { cache: 'no-store' });
-          if (r.ok) out.push(...(await r.json()));
-        }catch(e){ /* ignore */ }
-      }
-      return out;
+    async function loadHeat() {
+      const r = await fetch(`${API_BASE}/heatbar`);
+      const j = await r.json();
+      const root = document.getElementById('heatbar');
+      root.innerHTML = '';
+      const max = Math.max(1, ...j.days.map(d => d.score));
+      const weekday = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      j.days.forEach((d, i) => {
+        const col = document.createElement('div');
+        col.className = 'col';
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${(d.score / max) * 100}px`;
+        col.appendChild(bar);
+        const counts = document.createElement('div');
+        counts.className = 'counts';
+        counts.textContent = `H${d.high} M${d.med} L${d.low}`;
+        col.appendChild(counts);
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = weekday[i];
+        col.appendChild(label);
+        root.appendChild(col);
+      });
     }
 
-    function inferISO(r){
-      let ms=null;
-      if (typeof r.timestamp==='number') ms=r.timestamp*(r.timestamp<2e10?1000:1);
-      else if (typeof r.unix==='number') ms=r.unix*(r.unix<2e10?1000:1);
-      if (ms) return new Date(ms).toISOString();
-      const d=(r.date||r.day||r.datetime||'').toString();
-      const time=(r.time||r.hour||'00:00').toString();
-      const iso=new Date(`${d} ${time} UTC`);
-      return !Number.isNaN(iso.getTime())?iso.toISOString():new Date().toISOString();
+    async function loadEvents() {
+      const r = await fetch(`${API_BASE}/upcoming?limit=12`);
+      const j = await r.json();
+      const ul = document.getElementById('list');
+      ul.innerHTML = '';
+      (j.events || []).forEach(ev => {
+        const li = document.createElement('li');
+        const t = new Date(ev.datetime);
+        const badge = ev.impact === 'High' ? 'b-high' : ev.impact === 'Medium' ? 'b-med' : 'b-low';
+        li.innerHTML = `
+          <div class="row">
+            <div class="small">${t.toLocaleString([], { hour:'2-digit', minute:'2-digit'})}<br>${t.toLocaleDateString()}</div>
+            <div><div style="font-weight:600">${ev.title}</div><div class="small">${ev.country}</div></div>
+            <div class="badge ${badge}">${ev.impact}</div>
+          </div>`;
+        ul.appendChild(li);
+      });
     }
-
-    function normalize(raw){
-      return (raw||[]).map(r=>{
-        const t = inferISO(r);
-        const impactRaw = (r.impact||r.impact_text||r.impact_label||'').toString().toLowerCase();
-        const impactLevel = /high|red|3/.test(impactRaw)?3:/medium|yellow|2/.test(impactRaw)?2:1;
-        return {
-          id: r.id || `${t}|${r.title}|${r.country}`,
-          datetime: t,
-          title: r.title || r.event || '(No title)',
-          country: r.country || r.currency || '',
-          impact: ['Low','Medium','High'][impactLevel-1],
-          impactLevel
-        };
-      }).filter(e => !Number.isNaN(new Date(e.datetime).getTime()));
-    }
-
-    function startOfWeekUTC(d){
-      const day=d.getUTCDay(); // 0=Sun
-      const diff=(day===0?-6:1)-day; // -> Monday
-      const out=new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-      out.setUTCDate(out.getUTCDate()+diff);
-      return out;
-    }
-
-    async function loadHeat(){
-      const err = document.getElementById('heatErr');
-      err.textContent = '';
-      try{
-        const events = normalize(await fetchTwoWeeks());
-        const base = startOfWeekUTC(new Date());
-        const days = Array.from({length:7},(_,i)=> new Date(base.getTime()+i*86400000));
-        const label = d=>d.toISOString().slice(0,10);
-        const map = Object.fromEntries(days.map(d=>[label(d),{date:label(d),score:0,high:0,med:0,low:0}]));
-        for (const e of events){
-          const key = label(new Date(e.datetime));
-          if (!map[key]) continue;
-          if (e.impactLevel===3){ map[key].high++; map[key].score+=3; }
-          else if (e.impactLevel===2){ map[key].med++; map[key].score+=2; }
-          else { map[key].low++; map[key].score+=1; }
-        }
-        const arr = Object.values(map);
-        const max = Math.max(1, ...arr.map(d=>d.score));
-        const root = document.getElementById('heatbar');
-        root.innerHTML = '';
-        arr.forEach((d,i)=>{
-          const col = document.createElement('div');
-          col.className = 'col';
-          const bar = document.createElement('div');
-          bar.className = 'bar';
-          bar.style.height = `${(d.score/max)*100}px`;
-          col.appendChild(bar);
-          const counts = document.createElement('div');
-          counts.className = 'counts';
-          counts.textContent = `H${d.high} M${d.med} L${d.low}`;
-          col.appendChild(counts);
-          const lab = document.createElement('div');
-          lab.className = 'label';
-          lab.textContent = weekday[i];
-          col.appendChild(lab);
-          root.appendChild(col);
-        });
-      }catch(e){
-        err.textContent = 'Could not load heatbar.';
-      }
-    }
-
-    async function loadEvents(){
-      const err = document.getElementById('listErr');
-      err.textContent = '';
-      try{
-        const events = normalize(await fetchTwoWeeks())
-          .filter(e => new Date(e.datetime).getTime() >= Date.now())
-          .sort((a,b)=> new Date(a.datetime)-new Date(b.datetime))
-          .slice(0,12);
-        const ul = document.getElementById('list');
-        ul.innerHTML = '';
-        for (const ev of events){
-          const li = document.createElement('li');
-          const t = new Date(ev.datetime);
-          const badge = ev.impact==='High'?'b-high':ev.impact==='Medium'?'b-med':'b-low';
-          li.innerHTML = `
-            <div class="row">
-              <div class="small">${t.toLocaleString([], {hour:'2-digit', minute:'2-digit'})}<br>${t.toLocaleDateString()}</div>
-              <div><div style="font-weight:600">${escapeHtml(ev.title)}</div><div class="small">${ev.country}</div></div>
-              <div class="badge ${badge}">${ev.impact}</div>
-            </div>`;
-          ul.appendChild(li);
-        }
-      }catch(e){
-        err.textContent = 'Could not load upcoming events.';
-      }
-    }
-
-    function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
     loadHeat();
     loadEvents();
