@@ -1,61 +1,250 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>USD High-Impact Events</title>
-  <style>
-    :root {
-      --bg:#0b0f14; --text:#e7edf3; --muted:#9fb0c3; --card:#121821;
-      --accent:#4ade80; --accent2:#60a5fa; --danger:#f87171;
-    }
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto}
-    header{padding:20px 0;text-align:center}
-    h1{margin:0;font-size:22px;font-weight:700}
-    .wrap{max-width:700px;margin:0 auto;padding:0 16px}
-    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;margin-bottom:12px}
-    .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-    .badge{padding:4px 8px;border-radius:999px;font-size:12px;font-weight:600}
-    .b-high{background:rgba(248,113,113,.15);color:var(--danger)}
-    .muted{color:var(--muted);font-size:13px}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>High-impact USD — This Week</title>
+<meta name="theme-color" content="#0c0c0e" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<style>
+html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+.statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
+:root{
+--bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
+--panel:#121316;--panel2:#17181c;--ring:#2a2b31;
+--badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
+--accent-ring:#5a4b13;--high:#c63b3b;
+}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
+header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
+h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.small{color:var(--muted);font-size:12px}
+main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
+.note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
+ul{list-style:none;margin:0;padding:0}
+.item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.left{width:8px;background:var(--ring)}
+.content{flex:1;padding:18px 18px 16px}
+.title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--badge);border:1px solid var(--ring);font-size:12px;color:#d7d7dc}
+.badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
+.badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
+.when,.meta{font-size:14px;color:var(--muted)}
+.when{margin-bottom:6px}
+.item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
+.item.today .left{background:var(--accent)}
+.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+
+/* heatbar */
+.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
+.heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
+.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:58px;text-align:right}
+.heatmini .src{font-size:11px;color:#8b8c93;margin-left:6px}
+.heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
+.heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
+.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
+.heatmini .fill.pos{left:50%;background:#1f5d2f}
+.heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
+</style>
 </head>
 <body>
-  <header>
-    <h1>High-Impact USD Events This Week</h1>
-    <div class="muted">From ForexFactory XML feed via Cloudflare Worker</div>
-  </header>
-  <main class="wrap">
-    <div id="list"></div>
-    <div id="meta" class="muted" style="margin-top:20px;text-align:center"></div>
-  </main>
+<div class="statusbar" aria-hidden="true"></div>
+<header class="top">
+<div class="small" id="now"></div>
+<h1>
+High-impact USD events for this week.
+<div class="heatmini">
+<span class="badge">US30</span>
+<div class="bar">
+<div class="zero"></div>
+<div id="hbFill" class="fill"></div>
+</div>
+<span id="hbVal" class="val">—</span>
+<span id="hbSrc" class="src"></span>
+</div>
+</h1>
+<div class="small" id="updated"></div>
+</header>
 
-  <script>
-    const API = "https://green-haze.mikaelalexiou.workers.dev";
-    async function load(){
-      try{
-        const r = await fetch(API);
-        const j = await r.json();
-        const box = document.getElementById('list');
-        box.innerHTML = "";
-        (j.items||[]).forEach(ev=>{
-          const card = document.createElement('div');
-          card.className='card';
-          card.innerHTML=`
-            <div class="row">
-              <div><strong>${ev.title}</strong></div>
-              <div class="badge b-high">${ev.impact}</div>
-            </div>
-            <div class="muted">${ev.date} ${ev.time}</div>
-            <div class="muted">${ev.currency}</div>`;
-          box.appendChild(card);
-        });
-        document.getElementById('meta').textContent = `Updated: ${new Date(j.now).toLocaleString()}`;
-      }catch(e){
-        document.getElementById('list').innerHTML = `<div class="card">Error loading feed: ${e}</div>`;
-      }
-    }
-    load();
-  </script>
+<main>
+<div class="note" id="note">Loading…</div>
+<ul id="list"></ul>
+<div class="footer">Data via ForexFactory (proxied)</div>
+</main>
+
+<template id="row">
+<li class="item">
+<div class="left"></div>
+<div class="content">
+<h3 class="title"></h3>
+<div class="badges"></div>
+<div class="when"></div>
+<div class="meta"></div>
+</div>
+</li>
+</template>
+
+<script>
+// ===== CONFIG =====
+const WORKER = "[https://green-haze-8240.mikaelalexiou.workers.dev](https://green-haze-8240.mikaelalexiou.workers.dev/)";
+const CACHE_KEY = "ff_usd_high_cache_final";
+
+// Fallback seed (so you always see something)
+const SEED_ITEMS = [
+{ title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+{ title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
+{ title:"ISM Services PMI",                datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+];
+
+// ===== helpers =====
+function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
+function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
+function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
+function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
+
+// ===== Heatbar =====
+function setUS30Pct(pct, sourceLabel){
+const val=document.getElementById('hbVal');
+const fill=document.getElementById('hbFill');
+const src=document.getElementById('hbSrc');
+if(!val||!fill) return;
+
+const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
+fill.classList.remove('pos','neg');
+if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
+else{fill.classList.add('neg');val.style.color='#ef4444';}
+fill.style.width=w.toFixed(2)+'%';
+val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+src.textContent = sourceLabel ? `· ${sourceLabel}` : '';
+}
+
+let hbInterval = 180000; // 3m, backs off on error
+async function fetchUS30(){
+// Try 1: Yahoo quote ^DJI
+const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("<https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI>")}`, "DJI quote");
+if (pct1 != null) { setUS30Pct(pct1, "DJI"); scheduleNext(true); return; }
+
+// Try 2: Yahoo chart ^DJI derive %
+const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("<https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m>")}`, "DJI chart");
+if (pct2 != null) { setUS30Pct(pct2, "DJI*"); scheduleNext(true); return; }
+
+// Try 3: DIA ETF as proxy
+const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("<https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA>")}`, "DIA quote");
+if (pct3 != null) { setUS30Pct(pct3, "DIA"); scheduleNext(true); return; }
+
+// All failed: backoff and try later (leave value unchanged)
+scheduleNext(false);
+}
+
+function scheduleNext(success){
+hbInterval = success ? 180000 : Math.min(hbInterval * 1.7, 15*60*1000);
+setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
+}
+
+async function getPctVia(url, label){
+try{
+const r = await fetch(url, { cache: "no-store" });
+if(!r.ok) return null;
+const data = await r.json();
+// Worker returns {ok:false,...} on upstream fail; guard it
+const q = data?.quoteResponse?.result?.[0];
+if (!q) return null;
+if (typeof q.regularMarketChangePercent === "number") return q.regularMarketChangePercent;
+if (typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
+return ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
+}
+return null;
+}catch(_){ return null; }
+}
+
+async function getPctFromChart(url, label){
+try{
+const r = await fetch(url, { cache: "no-store" });
+if(!r.ok) return null;
+const data = await r.json();
+const meta = data?.chart?.result?.[0]?.meta;
+if (!meta) return null;
+const last = meta.regularMarketPrice ?? meta.previousClose;
+const prev = meta.chartPreviousClose ?? meta.previousClose;
+if (typeof last === "number" && typeof prev === "number" && prev !== 0) {
+return ((last - prev) / prev) * 100;
+}
+return null;
+}catch(_){ return null; }
+}
+
+// kick off
+fetchUS30();
+
+// ===== render (news list) =====
+function render(items){
+const list = document.getElementById('list');
+const note = document.getElementById('note');
+list.innerHTML = '';
+const tpl = document.getElementById('row');
+const todayISO = new Date().toISOString().slice(0,10);
+let todays = 0;
+
+for (const e of items){
+const li = tpl.content.firstElementChild.cloneNode(true);
+const dstr = e.datetime || "";
+let isToday = dstr.startsWith(todayISO);
+if (!isToday){
+const dt = new Date(dstr);
+if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
+}
+if (isToday){ li.classList.add('today'); todays++; }
+
+```
+li.querySelector('.title').textContent = e.title;
+const badges = li.querySelector('.badges');
+const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+
+const dtTry = new Date(dstr);
+const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
+li.querySelector('.when').textContent = whenText;
+li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+list.appendChild(li);
+
+```
+
+}
+
+note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+}
+
+// ===== main (news) =====
+document.getElementById('now').textContent =
+new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
+
+(async function(){
+let items = [];
+try{
+const r = await fetch(WORKER, { cache: "no-store" });
+if (r.ok){
+const payload = await r.json();
+if (payload && payload.items) items = payload.items;
+}
+}catch(_){}
+
+if (!items.length){
+const c = loadCache();
+if (c?.items?.length) items = c.items;
+}
+
+if (!items.length){
+items = SEED_ITEMS;
+} else {
+saveCache(items);
+}
+
+render(items);
+})();
+</script>
 </body>
 </html>
