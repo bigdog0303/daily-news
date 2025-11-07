@@ -1,236 +1,103 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>High-impact USD — This Week</title>
-
-<!-- iOS/Safari dark status area -->
-<meta name="theme-color" content="#0c0c0e" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-<style>
-/* ---- Base -------------------------------------------------------------- */
-html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;
-  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
-:root{
-  --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
-  --panel:#121316;--panel2:#17181c;--ring:#2a2b31;
-  --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
-  --accent-ring:#5a4b13;--high:#c63b3b;
-}
-body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
-.statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
-/* ---- Header ------------------------------------------------------------ */
-header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
-h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.small{color:var(--muted);font-size:12px}
-main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
-/* ---- Cards/List -------------------------------------------------------- */
-.note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
-ul{list-style:none;margin:0;padding:0}
-.item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
-.left{width:8px;background:var(--ring)}
-.content{flex:1;padding:18px 18px 16px}
-.title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:.2px}
-.badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:var(--badge);border:1px solid var(--ring);font-size:12px;color:#d7d7dc}
-.badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
-.badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
-.when,.meta{font-size:14px;color:var(--muted)}
-.when{margin-bottom:6px}
-.item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
-.item.today .left{background:var(--accent)}
-.footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
-.err{color:#ff9b9b;margin-top:8px;text-align:center}
-/* ---- Heatbar (US30) ---------------------------------------------------- */
-.heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:8px;vertical-align:middle}
-.heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
-.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:56px;text-align:right}
-.heatmini .bar{position:relative;width:110px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
-.heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
-.heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
-.heatmini .fill.pos{left:50%;background:#1f5d2f}
-.heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FX Dashboard — Green Haze</title>
+  <style>
+    :root{--bg:#0b0f14;--card:#121821;--text:#e6edf3;--muted:#9fb0c3;--accent:#4ade80;--accent2:#60a5fa;--danger:#f87171}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0b0f14 0%,rgba(11,15,20,0.8)100%);backdrop-filter:blur(6px);z-index:10}
+    .wrap{max-width:1100px;margin:0 auto;padding:20px}
+    h1{margin:0;font-size:22px;font-weight:700}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
+    .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .small{color:var(--muted);font-size:12px}
+    .heat{display:flex;gap:10px;align-items:flex-end;height:120px;margin-top:10px}
+    .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
+    .bar{width:28px;border-radius:8px;background:linear-gradient(180deg,var(--accent),var(--accent2));transition:height .3s}
+    .label{font-size:12px;color:var(--muted)}
+    .counts{font-size:11px;color:var(--muted)}
+    ul{list-style:none;margin:0;padding:0}
+    li+li{border-top:1px solid #1f2937}
+    .row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:10px 0;align-items:center}
+    .badge{padding:4px 8px;border-radius:999px;font-weight:600;font-size:12px}
+    .b-high{background:rgba(248,113,113,.15);color:var(--danger)}
+    .b-med{background:rgba(96,165,250,.15);color:var(--accent2)}
+    .b-low{background:rgba(74,222,128,.15);color:var(--accent)}
+    a.btn{display:inline-block;margin-top:8px;padding:10px 14px;border:1px solid #1f2937;border-radius:12px;color:var(--text);text-decoration:none}
+  </style>
 </head>
 <body>
-<div class="statusbar" aria-hidden="true"></div>
-
-<header class="top">
-  <div class="small" id="now"></div>
-  <h1>
-    High-impact USD events for this week.
-    <span class="heatmini">
-      <span class="badge">US30</span>
-      <span class="bar">
-        <span class="zero"></span>
-        <span id="hbFill" class="fill"></span>
-      </span>
-      <span id="hbVal" class="val">+0.00%</span>
-    </span>
-  </h1>
-  <div class="small" id="updated"></div>
-</header>
-
-<main>
-  <div class="note" id="note">Loading…</div>
-  <ul id="list"></ul>
-  <div class="err" id="err" hidden></div>
-  <div class="footer">Data via ForexFactory (proxied)</div>
-</main>
-
-<template id="row">
-  <li class="item">
-    <div class="left"></div>
-    <div class="content">
-      <h3 class="title"></h3>
-      <div class="badges"></div>
-      <div class="when"></div>
-      <div class="meta"></div>
+  <header><div class="wrap"><h1>Green Haze — This Week</h1><div class="small">Heat by impact + Upcoming events</div></div></header>
+  <main class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2 style="margin:0 0 8px 0">Heatbar</h2>
+        <div id="heatbar" class="heat"></div>
+      </section>
+      <section class="card">
+        <h2 style="margin:0 0 8px 0">Next Events</h2>
+        <ul id="list"></ul>
+        <a class="btn" href="calendar.html">Open Monthly Calendar →</a>
+      </section>
     </div>
-  </li>
-</template>
+  </main>
 
-<script>
-/* ============================== CONFIG =============================== */
-const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your worker
-const CACHE_KEY = "ff_usd_high_cache_v2";
+  <script>
+    const API_BASE = 'https://green-haze.mikaelalexiou.workers.dev';
 
-/* Seed (so page never looks empty if source is temporarily down) */
-const SEED_ITEMS = [
-  { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", actual:"" },
-  { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", actual:"" },
-  { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", actual:"" },
-];
+    const weekday = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
-/* ============================== Helpers ============================== */
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
-function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
-const fD = new Intl.DateTimeFormat([], {month:"short", day:"2-digit"});
-const fT = new Intl.DateTimeFormat([], {hour:"2-digit", minute:"2-digit"});
+    async function loadHeat() {
+      const r = await fetch(`${API_BASE}/heatbar`);
+      const j = await r.json();
+      const root = document.getElementById('heatbar');
+      root.innerHTML = '';
+      const max = Math.max(1, ...j.days.map(d => d.score));
 
-/* ============================== Heatbar ============================== */
-function setUS30Pct(pct){
-  const val = document.getElementById("hbVal");
-  const fill = document.getElementById("hbFill");
-  if(!val || !fill) return;
-
-  const CAP = 2;                               // clamp +/- 2%
-  const mag = Math.min(Math.abs(pct), CAP);
-  const half = 50;                             // half bar is 50%
-  const width = (mag / CAP) * half;
-
-  fill.classList.remove("pos","neg");
-  if (pct >= 0){ fill.classList.add("pos"); val.style.color = "#22c55e"; }
-  else         { fill.classList.add("neg"); val.style.color = "#ef4444"; }
-
-  fill.style.width = width.toFixed(2) + "%";
-  val.textContent = (pct>=0?"+":"") + pct.toFixed(2) + "%";
-}
-
-async function fetchUS30(){
-  try{
-    const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?interval=1m");
-    const r = await fetch(`${WORKER}/?url=${target}`, { cache:"no-store" });
-    if(!r.ok) throw new Error("heatbar http "+r.status);
-    const data = await r.json();
-    const meta = data.chart?.result?.[0]?.meta;
-    const last = meta?.regularMarketPrice;
-    const prev = meta?.chartPreviousClose;
-    if (last && prev){
-      setUS30Pct(((last - prev) / prev) * 100);
+      j.days.forEach((d, i) => {
+        const col = document.createElement('div');
+        col.className = 'col';
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${(d.score / max) * 100}px`;
+        col.appendChild(bar);
+        const counts = document.createElement('div');
+        counts.className = 'counts';
+        counts.textContent = `H${d.high} M${d.med} L${d.low}`;
+        col.appendChild(counts);
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = weekday[i];
+        col.appendChild(label);
+        root.appendChild(col);
+      });
     }
-  }catch(_){ /* keep silent; leave previous value */ }
-}
 
-/* Update heatbar immediately and then every 60s (429-safe cadence) */
-fetchUS30();
-setInterval(fetchUS30, 60_000);
-
-/* ============================== Render =============================== */
-function render(items, {cached=false, staleNote=""}={}){
-  const list = document.getElementById("list");
-  const note = document.getElementById("note");
-  const err  = document.getElementById("err");
-
-  list.innerHTML = "";
-  const tpl = document.getElementById("row");
-  const todayISO = new Date().toISOString().slice(0,10);
-  let todays = 0;
-
-  for(const e of items){
-    const li = tpl.content.firstElementChild.cloneNode(true);
-
-    let isToday = false;
-    if (typeof e.datetime === "string"){
-      isToday = e.datetime.startsWith(todayISO);
-      if (!isToday){
-        const dt = new Date(e.datetime);
-        if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
-      }
+    async function loadEvents() {
+      const r = await fetch(`${API_BASE}/upcoming?limit=12`);
+      const j = await r.json();
+      const ul = document.getElementById('list');
+      ul.innerHTML = '';
+      (j.events || []).forEach(ev => {
+        const li = document.createElement('li');
+        const t = new Date(ev.datetime);
+        const badge = ev.impact === 'High' ? 'b-high' : ev.impact === 'Medium' ? 'b-med' : 'b-low';
+        li.innerHTML = `
+          <div class="row">
+            <div class="small">${t.toLocaleString([], { hour:'2-digit', minute:'2-digit'})}<br>${t.toLocaleDateString()}</div>
+            <div><div style="font-weight:600">${escapeHtml(ev.title)}</div><div class="small">${ev.country}</div></div>
+            <div class="badge ${badge}">${ev.impact}</div>
+          </div>`;
+        ul.appendChild(li);
+      });
     }
-    if (isToday){ li.classList.add("today"); todays++; }
 
-    li.querySelector(".title").textContent = e.title ?? "Event";
+    function escapeHtml(s){return s.replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;','\'':'&#39;'}[c]));}
 
-    const badges = li.querySelector(".badges");
-    const b1 = document.createElement("span"); b1.className = "badge"; b1.textContent = "USD"; badges.appendChild(b1);
-    const b2 = document.createElement("span"); b2.className = "badge high"; b2.textContent = "High"; badges.appendChild(b2);
-    if (isToday){ const b3=document.createElement("span"); b3.className="badge today"; b3.textContent="Today"; badges.appendChild(b3); }
-
-    const dt = new Date(e.datetime);
-    const when = isNaN(dt) ? (e.datetime||"") : `${fD.format(dt)} at ${fT.format(dt)}`;
-    li.querySelector(".when").textContent = when;
-    li.querySelector(".meta").textContent = e.actual ? `Impact: High · ${e.actual}` : "Impact: High";
-
-    list.appendChild(li);
-  }
-
-  const suffix = staleNote || (cached ? " (cached)" : "");
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?"":"s"} today (highlighted).` + suffix;
-  document.getElementById("updated").textContent = "Updated: " + new Date().toLocaleString();
-
-  err.hidden = items.length !== 0;
-  if(items.length === 0) err.textContent = "No USD high-impact events found.";
-}
-
-/* ============================== Main ================================ */
-document.getElementById("now").textContent =
-  new Intl.DateTimeFormat([], {hour:"2-digit", minute:"2-digit"}).format(new Date());
-
-(async function(){
-  let used = false;
-
-  // (1) Try your Worker root (expected JSON: { ok, items, stale? })
-  try{
-    const r = await fetch(WORKER, { cache:"no-store" });
-    if (r.ok){
-      const payload = await r.json();
-      if (payload && Array.isArray(payload.items) && payload.items.length){
-        saveCache(payload.items);
-        render(payload.items, { cached:false, staleNote: payload.stale ? " (cached)" : "" });
-        used = true;
-      }
-    }
-  }catch(_){}
-
-  // (2) Fallback to local cache
-  if(!used){
-    const c = loadCache();
-    if (c?.items?.length){
-      render(c.items, { cached:true });
-      used = true;
-    }
-  }
-
-  // (3) Final fallback: seeds
-  if(!used){
-    render(SEED_ITEMS, { cached:true, staleNote:" (seed)" });
-  }
-})();
-</script>
+    loadHeat();
+    loadEvents();
+  </script>
 </body>
 </html>
