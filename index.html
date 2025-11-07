@@ -59,6 +59,7 @@ ul{list-style:none;margin:0;padding:0}
 .cal-tag{margin-top:6px;padding:4px 6px;border-radius:999px;border:1px solid var(--ring);background:#1f2025;font-size:11px;color:#dcdde3;width:max-content}
 .cal-tag.high{border-color:#814; background:#2a1518; color:#ffb3b3}
 .empty{opacity:.6}
+.badge.seed{background:#2a2432;border-color:#433255;color:#cdb6ff}
 </style>
 </head>
 <body>
@@ -112,8 +113,15 @@ ul{list-style:none;margin:0;padding:0}
 
 <script>
 /* ===== CONFIG ===== */
-const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your Worker
-const CACHE_KEY = "ff_usd_cache_v3";
+const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your worker
+const CACHE_KEY = "ff_usd_cache_v4";
+
+/* Seed items so UI never goes blank */
+const SEED_ITEMS = [
+  { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD" },
+  { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD" },
+  { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD" },
+];
 
 /* ===== helpers ===== */
 function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(),items})); }catch{} }
@@ -170,6 +178,7 @@ function renderList(items, tag=""){
     const badges = li.querySelector('.badges');
     const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
     const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
+    if(tag==='(seed)'){ const s=document.createElement('span'); s.className='badge seed'; s.textContent='seed'; badges.appendChild(s); }
     if(isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
 
     li.querySelector('.when').textContent = isNaN(dt) ? (e.date||dstr) : `${fmtMD(dt)} at ${fmtTime(dt)}`;
@@ -184,7 +193,7 @@ function renderList(items, tag=""){
   if(items.length===0) err.textContent='No USD high-impact events found.';
 }
 
-function renderCalendar(allItems, ym){
+function renderCalendar(allItems, ym, tag=""){
   const [Y,M] = ym.split('-').map(n=>+n);
   document.getElementById('cal-month').textContent = fmtMonthLabel(Y,M);
 
@@ -217,24 +226,26 @@ function renderCalendar(allItems, ym){
     });
 
     for(const ev of todays){
-      const tag = document.createElement('div');
-      tag.className='cal-tag high';
+      const tagEl = document.createElement('div');
+      tagEl.className='cal-tag high';
       const t = new Date(ev.datetime || `${ev.date||''} ${ev.time||''}`.trim());
-      tag.textContent = (isNaN(t) ? '' : (fmtTime(t)+' · ')) + (ev.title||'Event');
-      cell.appendChild(tag);
+      tagEl.textContent = (isNaN(t) ? '' : (fmtTime(t)+' · ')) + (ev.title||'Event');
+      cell.appendChild(tagEl);
     }
     grid.appendChild(cell);
   }
+
+  const note = document.getElementById('note');
+  note.textContent = `Month view ${tag}`.trim();
 }
 
 /* ===== data ===== */
 async function fetchAliases(){
   const r = await fetch(WORKER, {cache:'no-store'});
-  if(!r.ok) throw new Error('worker not ok');
+  if(!r.ok) return {items:[]};
   return await r.json();
 }
 async function fetchMonth(ym){
-  // Try worker month
   try{
     const r = await fetch(`${WORKER}?month=${ym}`, {cache:'no-store'});
     if(r.ok){
@@ -242,7 +253,6 @@ async function fetchMonth(ym){
       if (Array.isArray(p.items) && p.items.length) return {items:p.items, tag:"(month)"};
     }
   }catch{}
-  // Fallback: aliases
   const p = await fetchAliases();
   return {items:p.items||[], tag:"(filtered)"};
 }
@@ -265,46 +275,53 @@ function showCal(){
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
-// Load LIST immediately
+// Load LIST immediately with hard fallback chain
 (async function loadListFirst(){
   showList();
   try{
-    const p = await fetchAliases();
-    const items = p.items||[];
+    const p = await fetchAliases();              // Worker aliases
+    let items = p.items || [];
+    let tag = '';
+
+    if (!items.length) {                         // cache fallback
+      const c = loadCache();
+      if (c?.items?.length){ items = c.items; tag='(cached)'; }
+    }
+    if (!items.length) {                         // seed fallback
+      items = SEED_ITEMS; tag='(seed)';
+    }
+
     saveCache(items);
-    renderList(items);
+    renderList(items, tag);
   }catch(e){
-    const c = loadCache();
-    renderList(c?.items||[], '(cached)');
+    // absolute last resort
+    renderList(SEED_ITEMS, '(seed)');
   }
 })();
 
 // Tab handlers
 document.getElementById('tab-list').onclick = async ()=>{
   showList();
-  try{
-    const p = await fetchAliases();
-    const items = p.items||[];
-    saveCache(items);
-    renderList(items);
-  }catch{
-    const c = loadCache();
-    renderList(c?.items||[], '(cached)');
-  }
+  const c = loadCache();
+  renderList((c?.items&&c.items.length)?c.items:SEED_ITEMS, (c?.items?.length?'(cached)':'(seed)'));
 };
 
 document.getElementById('tab-cal').onclick = async ()=>{
   showCal();
   const ym = new Date().toISOString().slice(0,7);
   try{
-    const {items, tag} = await fetchMonth(ym);
-    renderCalendar(items, ym);
-    document.getElementById('note').textContent = `Month view ${tag}`;
+    let {items, tag} = await fetchMonth(ym);     // worker month or filtered aliases
+    if (!items.length){                          // cache
+      const c = loadCache();
+      if (c?.items?.length){ items = c.items; tag='(cached)'; }
+    }
+    if (!items.length){                          // seed
+      items = SEED_ITEMS; tag='(seed)';
+    }
+    renderCalendar(items, ym, tag);
     document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
   }catch{
-    const c = loadCache();
-    renderCalendar(c?.items||[], ym);
-    document.getElementById('note').textContent = 'Month view (cached)';
+    renderCalendar(SEED_ITEMS, ym, '(seed)');
   }
 };
 </script>
