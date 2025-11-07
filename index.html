@@ -86,10 +86,10 @@ ul{list-style:none;margin:0;padding:0}
 
 <script>
 // ===== CONFIG =====
-const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your Worker
+const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev";
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Seed items for fallback
+// Fallback seed
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -102,7 +102,7 @@ function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"n
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-// ===== US30 mini heatbar (using Yahoo quote endpoint) =====
+// ===== Heatbar (uses quote endpoint, backoff on failure) =====
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -115,33 +115,40 @@ function setUS30Pct(pct){
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
 }
 
+let hbInterval = 180000; // 3m
 async function fetchUS30(){
   try{
     const yahoo = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI";
     const target = encodeURIComponent(yahoo);
     const url = `${WORKER}/?url=${target}`;
     const res = await fetch(url, { cache: "no-store" });
-    if(!res.ok) return;
+    if(!res.ok) throw new Error("not ok");
+
     const data = await res.json();
     const q = data.quoteResponse?.result?.[0];
-    if (q && typeof q.regularMarketChangePercent === "number") {
-      setUS30Pct(q.regularMarketChangePercent);
-      return;
+    let pct = null;
+
+    if (q && typeof q.regularMarketChangePercent === "number") pct = q.regularMarketChangePercent;
+    else if (q && typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
+      pct = ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
     }
-    if (q && typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
-      const pct = ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
+    if (typeof pct === "number") {
       setUS30Pct(pct);
+      hbInterval = 180000; // reset to 3m on success
     }
-  }catch(e){}
+  }catch(e){
+    // backoff (max ~15m)
+    hbInterval = Math.min(hbInterval * 1.7, 15 * 60 * 1000);
+  } finally {
+    setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000)); // add jitter
+  }
 }
 fetchUS30();
-setInterval(fetchUS30, 180000); // every 3 mins
 
 // ===== render =====
 function render(items){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
-
   list.innerHTML = '';
   const tpl = document.getElementById('row');
   const todayISO = new Date().toISOString().slice(0,10);
@@ -156,8 +163,8 @@ function render(items){
       if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
     }
     if (isToday){ li.classList.add('today'); todays++; }
-    li.querySelector('.title').textContent = e.title;
 
+    li.querySelector('.title').textContent = e.title;
     const badges = li.querySelector('.badges');
     const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
     const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
@@ -180,7 +187,6 @@ document.getElementById('now').textContent =
 
 (async function(){
   let items = [];
-
   try{
     const r = await fetch(WORKER, { cache: "no-store" });
     if (r.ok){
