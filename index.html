@@ -14,13 +14,20 @@ html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-w
   --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
   --panel:#121316;--panel2:#17181c;--ring:#2a2b31;
   --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
-  --accent-ring:#5a4b13;--high:#c63b3b;
+  --accent-ring:#5a4b13;--high:#c63b3b;--ok:#22c55e;--bad:#ef4444;
 }
 body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
 header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
-h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{margin:0 6px 2px 0;font-size:28px;letter-spacing:.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
 .small{color:var(--muted);font-size:12px}
-main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
+main{max-width:960px;margin:0 auto;padding:14px 12px 40px}
+
+/* tabs */
+.tabs{display:flex;gap:8px;margin:10px 0 2px}
+.tab{padding:6px 12px;border-radius:999px;border:1px solid var(--ring);background:var(--panel2);color:var(--text);cursor:pointer}
+.tab.active{background:var(--accent-ink);border-color:var(--accent-ring);color:#ffe899}
+
+/* list */
 .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
 ul{list-style:none;margin:0;padding:0}
 .item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
@@ -47,6 +54,23 @@ ul{list-style:none;margin:0;padding:0}
 .heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
 .heatmini .fill.pos{left:50%;background:#1f5d2f}
 .heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
+
+/* calendar */
+#calWrap{margin-top:12px}
+.calHead{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 10px}
+.calHead h2{margin:0;font-size:18px;font-weight:800}
+.calNav{display:flex;gap:8px}
+.calBtn{padding:6px 10px;border-radius:10px;border:1px solid var(--ring);background:var(--panel2);cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wd{font-size:12px;color:var(--muted);text-align:center;margin-bottom:6px}
+.cell{border:1px solid var(--ring);border-radius:12px;min-height:68px;background:var(--panel2);padding:8px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer}
+.cell.out{opacity:.35}
+.cell .d{font-size:12px;color:var(--muted)}
+.badgesm{align-self:flex-end;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:var(--badge);color:#d7d7dc}
+.dot{width:6px;height:6px;border-radius:999px;background:var(--high);display:inline-block;margin-left:4px}
+.sel{outline:2px solid var(--accent-ring)}
+.dayEvents{margin-top:12px}
+.empty{color:var(--muted);text-align:center;border:1px dashed var(--ring);border-radius:12px;padding:12px}
 </style>
 </head>
 <body>
@@ -54,24 +78,46 @@ ul{list-style:none;margin:0;padding:0}
 <header class="top">
   <div class="small" id="now"></div>
   <h1>
-    High-impact USD events for this week.
+    High-impact USD events
     <div class="heatmini">
       <span class="badge">US30</span>
-      <div class="bar">
-        <div class="zero"></div>
-        <div id="hbFill" class="fill"></div>
-      </div>
-      <span id="hbVal" class="val">—</span>
-      <span id="hbSrc" class="src"></span>
+      <div class="bar"><div class="zero"></div><div id="hbFill" class="fill"></div></div>
+      <span id="hbVal" class="val">—</span><span id="hbSrc" class="src"></span>
     </div>
   </h1>
   <div class="small" id="updated"></div>
+  <div class="tabs">
+    <button id="tabList" class="tab active">List</button>
+    <button id="tabCal"  class="tab">Calendar</button>
+  </div>
 </header>
 
 <main>
-  <div class="note" id="note">Loading…</div>
-  <ul id="list"></ul>
-  <div class="footer">Data via ForexFactory (proxied)</div>
+  <!-- LIST -->
+  <section id="listView">
+    <div class="note" id="note">Loading…</div>
+    <ul id="list"></ul>
+    <div class="footer">Data via ForexFactory (proxied)</div>
+  </section>
+
+  <!-- CALENDAR -->
+  <section id="calView" style="display:none">
+    <div id="calWrap">
+      <div class="calHead">
+        <h2 id="calTitle">Month</h2>
+        <div class="calNav">
+          <button class="calBtn" id="prevM">‹</button>
+          <button class="calBtn" id="todayM">Today</button>
+          <button class="calBtn" id="nextM">›</button>
+        </div>
+      </div>
+      <div class="grid" id="wdRow">
+        <div class="wd">Mon</div><div class="wd">Tue</div><div class="wd">Wed</div><div class="wd">Thu</div><div class="wd">Fri</div><div class="wd">Sat</div><div class="wd">Sun</div>
+      </div>
+      <div class="grid" id="calGrid"></div>
+      <div class="dayEvents" id="dayEvents"></div>
+    </div>
+  </section>
 </main>
 
 <template id="row">
@@ -91,7 +137,7 @@ ul{list-style:none;margin:0;padding:0}
 const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev";
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Fallback seed (so you always see something)
+// Seed fallback (so calendar still has something)
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -103,101 +149,60 @@ function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({
 function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
+function ymd(d){ return d.toISOString().slice(0,10); }
 
-// ===== Heatbar =====
-function setUS30Pct(pct, sourceLabel){
+// ===== Heatbar (same logic) =====
+function setUS30Pct(pct, src){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
-  const src=document.getElementById('hbSrc');
+  const s=document.getElementById('hbSrc');
   if(!val||!fill) return;
-
   const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
   fill.classList.remove('pos','neg');
   if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
   else{fill.classList.add('neg');val.style.color='#ef4444';}
   fill.style.width=w.toFixed(2)+'%';
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
-  src.textContent = sourceLabel ? `· ${sourceLabel}` : '';
+  s.textContent = src ? `· ${src}` : '';
 }
-
-let hbInterval = 180000; // 3m, backs off on error
+let hbInterval = 180000;
 async function fetchUS30(){
-  // Try 1: Yahoo quote ^DJI
-  const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`, "DJI quote");
-  if (pct1 != null) { setUS30Pct(pct1, "DJI"); scheduleNext(true); return; }
-
-  // Try 2: Yahoo chart ^DJI derive %
-  const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`, "DJI chart");
-  if (pct2 != null) { setUS30Pct(pct2, "DJI*"); scheduleNext(true); return; }
-
-  // Try 3: DIA ETF as proxy
-  const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`, "DIA quote");
-  if (pct3 != null) { setUS30Pct(pct3, "DIA"); scheduleNext(true); return; }
-
-  // All failed: backoff and try later (leave value unchanged)
-  scheduleNext(false);
+  const q = `${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`;
+  const r = await tryPct(q);
+  if (r!=null){ setUS30Pct(r,"DJI"); hbInterval=180000; setTimeout(fetchUS30,hbInterval); return; }
+  const chart = `${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`;
+  const r2 = await tryChart(chart);
+  if (r2!=null){ setUS30Pct(r2,"DJI*"); hbInterval=180000; setTimeout(fetchUS30,hbInterval); return; }
+  const dia = `${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`;
+  const r3 = await tryPct(dia);
+  if (r3!=null){ setUS30Pct(r3,"DIA"); hbInterval=180000; setTimeout(fetchUS30,hbInterval); return; }
+  hbInterval=Math.min(hbInterval*1.7, 15*60*1000); setTimeout(fetchUS30,hbInterval);
 }
-
-function scheduleNext(success){
-  hbInterval = success ? 180000 : Math.min(hbInterval * 1.7, 15*60*1000);
-  setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
-}
-
-async function getPctVia(url, label){
-  try{
-    const r = await fetch(url, { cache: "no-store" });
-    if(!r.ok) return null;
-    const data = await r.json();
-    // Worker returns {ok:false,...} on upstream fail; guard it
-    const q = data?.quoteResponse?.result?.[0];
-    if (!q) return null;
-    if (typeof q.regularMarketChangePercent === "number") return q.regularMarketChangePercent;
-    if (typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
-      return ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
-    }
-    return null;
-  }catch(_){ return null; }
-}
-
-async function getPctFromChart(url, label){
-  try{
-    const r = await fetch(url, { cache: "no-store" });
-    if(!r.ok) return null;
-    const data = await r.json();
-    const meta = data?.chart?.result?.[0]?.meta;
-    if (!meta) return null;
-    const last = meta.regularMarketPrice ?? meta.previousClose;
-    const prev = meta.chartPreviousClose ?? meta.previousClose;
-    if (typeof last === "number" && typeof prev === "number" && prev !== 0) {
-      return ((last - prev) / prev) * 100;
-    }
-    return null;
-  }catch(_){ return null; }
-}
-
-// kick off
+async function tryPct(url){ try{const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; const d=await r.json(); const q=d?.quoteResponse?.result?.[0]; if(!q) return null;
+  if(typeof q.regularMarketChangePercent==="number") return q.regularMarketChangePercent;
+  if(typeof q.regularMarketPrice==="number" && typeof q.regularMarketPreviousClose==="number") return ((q.regularMarketPrice-q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100;
+  return null; }catch(_){return null;} }
+async function tryChart(url){ try{const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; const d=await r.json(); const m=d?.chart?.result?.[0]?.meta; if(!m) return null;
+  const last=m.regularMarketPrice ?? m.previousClose; const prev=m.chartPreviousClose ?? m.previousClose;
+  if(typeof last==="number" && typeof prev==="number" && prev!==0) return ((last-prev)/prev)*100; return null;}catch(_){return null;} }
 fetchUS30();
 
-// ===== render (news list) =====
-function render(items){
+// ===== List render =====
+function renderList(items){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
   list.innerHTML = '';
   const tpl = document.getElementById('row');
-  const todayISO = new Date().toISOString().slice(0,10);
-  let todays = 0;
+  const todayISO = ymd(new Date()); let todays=0;
 
   for (const e of items){
     const li = tpl.content.firstElementChild.cloneNode(true);
     const dstr = e.datetime || "";
     let isToday = dstr.startsWith(todayISO);
-    if (!isToday){
-      const dt = new Date(dstr);
-      if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
-    }
+    if (!isToday){ const dt = new Date(dstr); if (!isNaN(dt)) isToday = ymd(dt)===todayISO; }
     if (isToday){ li.classList.add('today'); todays++; }
-
     li.querySelector('.title').textContent = e.title;
+
     const badges = li.querySelector('.badges');
     const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
     const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
@@ -209,12 +214,125 @@ function render(items){
     li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
     list.appendChild(li);
   }
-
   note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
 }
 
-// ===== main (news) =====
+// ===== Calendar render =====
+let CAL_DATE = new Date(); // month anchor
+let ALL_ITEMS = [];        // loaded once, reused
+
+function groupByDay(items){
+  const map = new Map();
+  for(const e of items){
+    const d = new Date(e.datetime||e.date||"");
+    if(isNaN(d)) continue;
+    const k = ymd(d);
+    if(!map.has(k)) map.set(k, []);
+    map.get(k).push(e);
+  }
+  return map;
+}
+
+function renderCalendar(){
+  const grid = document.getElementById('calGrid');
+  const title = document.getElementById('calTitle');
+  const dayPanel = document.getElementById('dayEvents');
+  grid.innerHTML = ''; dayPanel.innerHTML = '';
+
+  const y = CAL_DATE.getFullYear();
+  const m = CAL_DATE.getMonth();
+  title.textContent = new Date(y,m,1).toLocaleDateString([], {month:'long', year:'numeric'});
+
+  // month boundaries
+  const first = new Date(y,m,1);
+  const last  = new Date(y,m+1,0);
+  // we want Mon..Sun; convert JS (Sun=0) -> Monday start
+  let startIdx = (first.getDay()+6)%7; // 0..6, 0 means Monday
+  const daysInMonth = last.getDate();
+
+  const byDay = groupByDay(ALL_ITEMS);
+
+  // previous month fillers
+  const prevLast = new Date(y,m,0).getDate();
+  for(let i=startIdx-1;i>=0;i--){
+    const d = new Date(y,m, -i);
+    grid.appendChild(dayCell(d, true, byDay));
+  }
+  // current month
+  for(let d=1; d<=daysInMonth; d++){
+    const dt = new Date(y,m,d);
+    grid.appendChild(dayCell(dt, false, byDay));
+  }
+  // next month fillers so rows complete (42 cells)
+  const totalCells = grid.children.length;
+  for(let i=1; totalCells+i<=42; i++){
+    const d = new Date(y,m,daysInMonth+i);
+    grid.appendChild(dayCell(d, true, byDay));
+  }
+}
+
+function dayCell(dateObj, isOut, byDay){
+  const k = ymd(dateObj);
+  const arr = byDay.get(k)||[];
+  const el = document.createElement('div');
+  el.className = 'cell' + (isOut?' out':'');
+  el.innerHTML = `<div class="d">${dateObj.getDate()}</div>
+                  <div>${arr.length? `<span class="badgesm">${arr.length} event${arr.length>1?'s':''}<span class="dot"></span></span>`:''}</div>`;
+  el.onclick = ()=>{
+    document.querySelectorAll('.cell').forEach(c=>c.classList.remove('sel'));
+    el.classList.add('sel');
+    renderDayEvents(k, arr);
+  };
+  // auto-select today if in view
+  const today = ymd(new Date());
+  if(k===today && !isOut) { setTimeout(()=>el.click(),0); }
+  return el;
+}
+
+function renderDayEvents(key, arr){
+  const panel = document.getElementById('dayEvents');
+  const nice = new Date(key+'T00:00:00');
+  const title = nice.toLocaleDateString([], {weekday:'long', month:'short', day:'2-digit'});
+  if(!arr.length){
+    panel.innerHTML = `<div class="empty">No high-impact USD events on ${title}.</div>`;
+    return;
+  }
+  let html = `<h3 style="margin:10px 2px 8px;font-size:16px">${title}</h3>`;
+  html += '<ul style="margin-top:6px;padding:0">';
+  arr.sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
+  for(const e of arr){
+    const t = new Date(e.datetime||"");
+    const when = isNaN(t)? '' : `${hhmm(t)}`;
+    html += `<li class="item" style="margin:10px 0">
+      <div class="left" style="background:var(--accent)"></div>
+      <div class="content">
+        <h3 class="title" style="font-size:18px">${e.title}</h3>
+        <div class="badges"><span class="badge">USD</span><span class="badge high">High</span></div>
+        <div class="when">${when}</div>
+        <div class="meta">${e.actual?`Impact: High · ${e.actual}`:'Impact: High'}</div>
+      </div>
+    </li>`;
+  }
+  html += '</ul>';
+  panel.innerHTML = html;
+}
+
+// ===== Tabs =====
+const tabList = document.getElementById('tabList');
+const tabCal  = document.getElementById('tabCal');
+const listView= document.getElementById('listView');
+const calView = document.getElementById('calView');
+
+tabList.onclick = ()=>{ tabList.classList.add('active'); tabCal.classList.remove('active'); listView.style.display=''; calView.style.display='none'; };
+tabCal.onclick  = ()=>{ tabCal.classList.add('active'); tabList.classList.remove('active'); listView.style.display='none'; calView.style.display=''; renderCalendar(); };
+
+// month nav
+document.getElementById('prevM').onclick = ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()-1); renderCalendar(); };
+document.getElementById('nextM').onclick = ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()+1); renderCalendar(); };
+document.getElementById('todayM').onclick= ()=>{ CAL_DATE = new Date(); renderCalendar(); };
+
+// ===== main =====
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
@@ -232,14 +350,11 @@ document.getElementById('now').textContent =
     const c = loadCache();
     if (c?.items?.length) items = c.items;
   }
+  if (!items.length){ items = SEED_ITEMS; }
 
-  if (!items.length){
-    items = SEED_ITEMS;
-  } else {
-    saveCache(items);
-  }
-
-  render(items);
+  ALL_ITEMS = items;
+  saveCache(items);
+  renderList(items);
 })();
 </script>
 </body>
