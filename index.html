@@ -137,7 +137,7 @@ ul{list-style:none;margin:0;padding:0}
 const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev";
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Seed fallback (so calendar still has something)
+// ===== Seeds for list fallback =====
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -151,7 +151,7 @@ function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 function ymd(d){ return d.toISOString().slice(0,10); }
 
-// ===== Heatbar (same logic) =====
+// ===== Heatbar (unchanged) =====
 function setUS30Pct(pct, src){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -220,14 +220,14 @@ function renderList(items){
 
 // ===== Calendar render =====
 let CAL_DATE = new Date(); // month anchor
-let ALL_ITEMS = [];        // loaded once, reused
+let ALL_ITEMS = [];        // items for current month
 
 function groupByDay(items){
   const map = new Map();
   for(const e of items){
-    const d = new Date(e.datetime||e.date||"");
-    if(isNaN(d)) continue;
-    const k = ymd(d);
+    const t = new Date(e.datetime||e.date||"");
+    if(isNaN(t)) continue;
+    const k = ymd(t);
     if(!map.has(k)) map.set(k, []);
     map.get(k).push(e);
   }
@@ -245,30 +245,18 @@ function renderCalendar(){
   title.textContent = new Date(y,m,1).toLocaleDateString([], {month:'long', year:'numeric'});
 
   // month boundaries
-  const first = new Date(y,m,1);
-  const last  = new Date(y,m+1,0);
-  // we want Mon..Sun; convert JS (Sun=0) -> Monday start
-  let startIdx = (first.getDay()+6)%7; // 0..6, 0 means Monday
-  const daysInMonth = last.getDate();
-
+  const first = new Date(y, m, 1);
+  const last  = new Date(y, m+1, 0);
   const byDay = groupByDay(ALL_ITEMS);
 
-  // previous month fillers
-  const prevLast = new Date(y,m,0).getDate();
-  for(let i=startIdx-1;i>=0;i--){
-    const d = new Date(y,m, -i);
-    grid.appendChild(dayCell(d, true, byDay));
-  }
-  // current month
-  for(let d=1; d<=daysInMonth; d++){
-    const dt = new Date(y,m,d);
-    grid.appendChild(dayCell(dt, false, byDay));
-  }
-  // next month fillers so rows complete (42 cells)
-  const totalCells = grid.children.length;
-  for(let i=1; totalCells+i<=42; i++){
-    const d = new Date(y,m,daysInMonth+i);
-    grid.appendChild(dayCell(d, true, byDay));
+  // Monday-based grid
+  const dow = (first.getDay() + 6) % 7; // Monday=0
+  const start = new Date(first); start.setDate(first.getDate() - dow);
+  // 6 rows x 7 = 42 cells
+  for (let i=0; i<42; i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const isOut = d.getMonth() !== m;
+    grid.appendChild(dayCell(d, isOut, byDay));
   }
 }
 
@@ -284,7 +272,7 @@ function dayCell(dateObj, isOut, byDay){
     el.classList.add('sel');
     renderDayEvents(k, arr);
   };
-  // auto-select today if in view
+  // auto-select today if in current month
   const today = ymd(new Date());
   if(k===today && !isOut) { setTimeout(()=>el.click(),0); }
   return el;
@@ -318,24 +306,40 @@ function renderDayEvents(key, arr){
   panel.innerHTML = html;
 }
 
-// ===== Tabs =====
+// ===== Tabs & month nav =====
 const tabList = document.getElementById('tabList');
 const tabCal  = document.getElementById('tabCal');
 const listView= document.getElementById('listView');
 const calView = document.getElementById('calView');
 
 tabList.onclick = ()=>{ tabList.classList.add('active'); tabCal.classList.remove('active'); listView.style.display=''; calView.style.display='none'; };
-tabCal.onclick  = ()=>{ tabCal.classList.add('active'); tabList.classList.remove('active'); listView.style.display='none'; calView.style.display=''; renderCalendar(); };
+tabCal.onclick  = async ()=>{
+  tabCal.classList.add('active'); tabList.classList.remove('active'); listView.style.display='none'; calView.style.display='';
+  await loadMonth(CAL_DATE);
+  renderCalendar();
+};
 
-// month nav
-document.getElementById('prevM').onclick = ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()-1); renderCalendar(); };
-document.getElementById('nextM').onclick = ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()+1); renderCalendar(); };
-document.getElementById('todayM').onclick= ()=>{ CAL_DATE = new Date(); renderCalendar(); };
+document.getElementById('prevM').onclick = async ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()-1); await loadMonth(CAL_DATE); renderCalendar(); };
+document.getElementById('nextM').onclick = async ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()+1); await loadMonth(CAL_DATE); renderCalendar(); };
+document.getElementById('todayM').onclick= async ()=>{ CAL_DATE = new Date(); await loadMonth(CAL_DATE); renderCalendar(); };
 
-// ===== main =====
+// ===== Loaders =====
+async function loadMonth(d){
+  const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  try{
+    const r = await fetch(`${WORKER}?month=${ym}`, { cache: "no-store" });
+    if (r.ok){
+      const payload = await r.json();
+      if (payload && payload.items) { ALL_ITEMS = payload.items; return; }
+    }
+  }catch(_){}
+  // fallback: keep current items if worker month fails
+}
+
 document.getElementById('now').textContent =
   new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
 
+// Initial list load
 (async function(){
   let items = [];
   try{
@@ -352,7 +356,6 @@ document.getElementById('now').textContent =
   }
   if (!items.length){ items = SEED_ITEMS; }
 
-  ALL_ITEMS = items;
   saveCache(items);
   renderList(items);
 })();
