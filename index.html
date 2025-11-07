@@ -6,21 +6,18 @@
   <title>Green Haze — This Week</title>
   <style>
     :root{--bg:#0b0f14;--card:#121821;--text:#e6edf3;--muted:#9fb0c3;--accent:#4ade80;--accent2:#60a5fa;--danger:#f87171}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Roboto}
     header{position:sticky;top:0;background:linear-gradient(180deg,#0b0f14 0%,rgba(11,15,20,0.8)100%);backdrop-filter:blur(6px);z-index:10}
     .wrap{max-width:1100px;margin:0 auto;padding:20px}
     h1{margin:0;font-size:22px;font-weight:700}
     .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin-top:16px}
     .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
     .small{color:var(--muted);font-size:12px}
-
     .heat{display:flex;gap:10px;align-items:flex-end;height:120px;margin-top:10px}
     .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px}
     .bar{width:28px;border-radius:8px;background:linear-gradient(180deg,var(--accent),var(--accent2));transition:height .3s}
     .label{font-size:12px;color:var(--muted)}
     .counts{font-size:11px;color:var(--muted)}
-
     ul{list-style:none;margin:0;padding:0}
     li+li{border-top:1px solid #1f2937}
     .row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;padding:10px 0;align-items:center}
@@ -47,6 +44,7 @@
 
   <script>
     const API_BASE = 'https://green-haze.mikaelalexiou.workers.dev';
+    const weekday = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
     async function loadHeat() {
       const r = await fetch(`${API_BASE}/heatbar`);
@@ -54,7 +52,6 @@
       const root = document.getElementById('heatbar');
       root.innerHTML = '';
       const max = Math.max(1, ...j.days.map(d => d.score));
-      const weekday = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
       j.days.forEach((d, i) => {
         const col = document.createElement('div');
         col.className = 'col';
@@ -85,13 +82,15 @@
         const badge = ev.impact === 'High' ? 'b-high' : ev.impact === 'Medium' ? 'b-med' : 'b-low';
         li.innerHTML = `
           <div class="row">
-            <div class="small">${t.toLocaleString([], { hour:'2-digit', minute:'2-digit'})}<br>${t.toLocaleDateString()}</div>
-            <div><div style="font-weight:600">${ev.title}</div><div class="small">${ev.country}</div></div>
+            <div class="small">${t.toLocaleString([], {hour:'2-digit', minute:'2-digit'})}<br>${t.toLocaleDateString()}</div>
+            <div><div style="font-weight:600">${escapeHtml(ev.title)}</div><div class="small">${ev.country}</div></div>
             <div class="badge ${badge}">${ev.impact}</div>
           </div>`;
         ul.appendChild(li);
       });
     }
+
+    function escapeHtml(s){return s.replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));}
 
     loadHeat();
     loadEvents();
