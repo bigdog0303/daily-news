@@ -102,7 +102,7 @@ function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"n
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-// ===== Heatbar (uses quote endpoint, backoff on failure) =====
+// ===== Heatbar =====
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -115,7 +115,7 @@ function setUS30Pct(pct){
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
 }
 
-let hbInterval = 180000; // 3m
+let hbInterval = 180000; // 3m (backs off on error)
 async function fetchUS30(){
   try{
     const yahoo = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI";
@@ -125,22 +125,22 @@ async function fetchUS30(){
     if(!res.ok) throw new Error("not ok");
 
     const data = await res.json();
-    const q = data.quoteResponse?.result?.[0];
-    let pct = null;
+    const q = data?.quoteResponse?.result?.[0];
 
-    if (q && typeof q.regularMarketChangePercent === "number") pct = q.regularMarketChangePercent;
-    else if (q && typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
-      pct = ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
-    }
-    if (typeof pct === "number") {
+    if (q && typeof q.regularMarketChangePercent === "number") {
+      setUS30Pct(q.regularMarketChangePercent);
+      hbInterval = 180000;
+    } else if (q && typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
+      const pct = ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
       setUS30Pct(pct);
-      hbInterval = 180000; // reset to 3m on success
+      hbInterval = 180000;
+    } else {
+      // Worker may have returned {ok:false}; ignore silently
     }
   }catch(e){
-    // backoff (max ~15m)
     hbInterval = Math.min(hbInterval * 1.7, 15 * 60 * 1000);
   } finally {
-    setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000)); // add jitter
+    setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
   }
 }
 fetchUS30();
