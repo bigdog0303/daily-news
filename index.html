@@ -86,10 +86,10 @@ ul{list-style:none;margin:0;padding:0}
 
 <script>
 // ===== CONFIG =====
-const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your new worker
+const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your Worker
 const CACHE_KEY = "ff_usd_high_cache_final";
 
-// Seed items (fallback so the page isn't blank if feed is temporarily empty)
+// Seed items for fallback
 const SEED_ITEMS = [
   { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
   { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
@@ -97,13 +97,12 @@ const SEED_ITEMS = [
 ];
 
 // ===== helpers =====
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
 function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
 function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
 function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
 function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-// ===== US30 mini heatbar (via proxy ?url=) =====
+// ===== US30 mini heatbar (using Yahoo quote endpoint) =====
 function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
@@ -115,27 +114,28 @@ function setUS30Pct(pct){
   fill.style.width=w.toFixed(2)+'%';
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
 }
+
 async function fetchUS30(){
   try{
-    const yahoo = "https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1m";
+    const yahoo = "https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI";
     const target = encodeURIComponent(yahoo);
     const url = `${WORKER}/?url=${target}`;
     const res = await fetch(url, { cache: "no-store" });
     if(!res.ok) return;
     const data = await res.json();
-    const meta = data.chart?.result?.[0]?.meta;
-    if(meta){
-      const last = meta.regularMarketPrice;
-      const prev = meta.chartPreviousClose;
-      if(last && prev){
-        const pct = ((last-prev)/prev)*100;
-        setUS30Pct(pct);
-      }
+    const q = data.quoteResponse?.result?.[0];
+    if (q && typeof q.regularMarketChangePercent === "number") {
+      setUS30Pct(q.regularMarketChangePercent);
+      return;
+    }
+    if (q && typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number") {
+      const pct = ((q.regularMarketPrice - q.regularMarketPreviousClose) / q.regularMarketPreviousClose) * 100;
+      setUS30Pct(pct);
     }
   }catch(e){}
 }
 fetchUS30();
-setInterval(fetchUS30, 180000); // every 3 minutes (kinder to Yahoo)
+setInterval(fetchUS30, 180000); // every 3 mins
 
 // ===== render =====
 function render(items){
@@ -149,7 +149,6 @@ function render(items){
 
   for (const e of items){
     const li = tpl.content.firstElementChild.cloneNode(true);
-
     const dstr = e.datetime || "";
     let isToday = dstr.startsWith(todayISO);
     if (!isToday){
@@ -157,7 +156,6 @@ function render(items){
       if (!isNaN(dt)) isToday = dt.toISOString().slice(0,10) === todayISO;
     }
     if (isToday){ li.classList.add('today'); todays++; }
-
     li.querySelector('.title').textContent = e.title;
 
     const badges = li.querySelector('.badges');
@@ -168,7 +166,6 @@ function render(items){
     const dtTry = new Date(dstr);
     const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
     li.querySelector('.when').textContent = whenText;
-
     li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
     list.appendChild(li);
   }
@@ -184,7 +181,6 @@ document.getElementById('now').textContent =
 (async function(){
   let items = [];
 
-  // 1) Try Worker (fresh)
   try{
     const r = await fetch(WORKER, { cache: "no-store" });
     if (r.ok){
@@ -193,13 +189,11 @@ document.getElementById('now').textContent =
     }
   }catch(_){}
 
-  // 2) Fallback to cache
   if (!items.length){
     const c = loadCache();
     if (c?.items?.length) items = c.items;
   }
 
-  // 3) Last resort: seed
   if (!items.length){
     items = SEED_ITEMS;
   } else {
