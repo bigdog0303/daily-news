@@ -5,61 +5,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>High-impact USD — This Week</title>
   <meta name="theme-color" content="#0c0c0e" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <style>
-    html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
     :root{
-      --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;--panel:#121316;--panel2:#17181c;--ring:#2a2b31;
-      --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;--accent-ring:#5a4b13;--high:#c63b3b;
+      --bg:#0b0f14; --text:#e7edf3; --muted:#9fb0c3; --ring:#262b33; --panel:#121821;
+      --chip:#1b1f27; --hi:#f87171; --pos:#22c55e; --neg:#ef4444; --track:#2a2f38;
     }
-    body{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
-    header.top{padding:16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
-    h1{margin:0 0 2px;font-size:28px;letter-spacing:-.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .small{color:var(--muted);font-size:12px}
-    main{max-width:880px;margin:0 auto;padding:14px 12px 40px}
-    .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2)}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto}
+
+    /* ===== TOP ===== */
+    header{padding:20px 16px 8px;border-bottom:1px solid var(--ring)}
+    .wrap{max-width:900px;margin:0 auto}
+    h1{margin:0 0 14px;font-size:34px;line-height:1.05;letter-spacing:-.02em;font-weight:900}
+
+    .metricline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .chip{background:var(--chip);border:1px solid var(--ring);border-radius:16px;padding:8px 16px;font-weight:900;font-size:22px}
+    .gauge{position:relative;width:260px;height:16px;background:var(--track);border:1px solid var(--ring);border-radius:999px;overflow:hidden}
+    .gauge .zero{position:absolute;left:50%;top:0;bottom:0;width:2px;background:#3a3b42}
+    .gauge .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease}
+    .gauge .fill.pos{left:50%;background:#1f5d2f}
+    .gauge .fill.neg{right:50%;left:auto;background:#7a1f1f}
+
+    .pct{font-weight:900;font-size:22px;min-width:86px;text-align:right}
+    .src{font-weight:700;font-size:16px;color:#9ad3df}
+    .src:empty{display:none}
+    .src:not(:empty)::before{content:"• ";margin-right:4px;color:#9ad3df}
+
+    .updated{margin-top:10px;color:var(--muted);font-size:13px}
+
+    /* ===== LIST ===== */
+    main{max-width:900px;margin:0 auto;padding:12px 16px 36px}
+    .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel)}
     ul{list-style:none;margin:0;padding:0}
-    .item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 0 var(--panel)}
-    .left{width:8px;background:var(--ring)}
-    .content{flex:1;padding:18px 18px 16px}
-    .title{margin:0 0 10px;font-size:22px;font-weight:800;letter-spacing:-.2px}
+    .item{display:flex;border-radius:22px;background:var(--panel);border:1px solid var(--ring);margin:16px 0;overflow:hidden}
+    .left{width:10px;background:var(--ring)}
+    .content{flex:1;padding:20px 18px 16px}
+    .title{margin:0 0 10px;font-size:28px;font-weight:900;letter-spacing:-.02em}
     .badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
-    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:700;background:var(--badge);border:1px solid var(--ring)}
-    .badge.high:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
-    .meta,.when{font-size:14px;color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:800;background:#161a20;border:1px solid var(--ring)}
+    .badge.high:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--hi)}
+    .when,.meta{font-size:15px;color:var(--muted)}
     .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
-    .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px}
-    .heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:58px;text-align:right}
-    .heatmini .src{font-size:11px;color:#88b9c3;margin-left:6px}
-    .heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
-    .heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
-    .heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
-    .heatmini .fill.pos{left:50%;background:#1f5d2f}
-    .heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
   </style>
 </head>
-
 <body>
-  <header class="top">
-    <h1>High-impact USD events for this week.
-      <div class="heatmini">
-        <span class="badge">US30</span>
-        <div class="bar">
+  <header>
+    <div class="wrap">
+      <h1>High-impact USD events for this week.</h1>
+      <div class="metricline">
+        <div class="chip">US30</div>
+        <div class="gauge">
           <div class="zero"></div>
           <div id="hbFill" class="fill"></div>
         </div>
-        <span id="hbVal" class="val"></span>
-        <span id="hbSrc" class="src"></span>
+        <div id="hbVal" class="pct">0.00%</div>
+        <div id="hbSrc" class="src"></div>
       </div>
-    </h1>
-    <div class="small" id="updated"></div>
+      <div id="updated" class="updated"></div>
+    </div>
   </header>
 
   <main>
-    <div class="note" id="note">Loading…</div>
-    <ul id="list"></ul>
-    <div class="footer">Data via ForexFactory (proxied)</div>
+    <div class="wrap">
+      <div class="note" id="note">Loading…</div>
+      <ul id="list"></ul>
+      <div class="footer">Data via ForexFactory (proxied)</div>
+    </div>
   </main>
 
   <template id="row">
@@ -75,147 +86,138 @@
   </template>
 
   <script>
-  // ===== CONFIG =====
-  const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev/";
-  const CACHE_KEY = "ff_usd_high_cache_final";
+    /* ===== CONFIG ===== */
+    const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev/";  // your working worker
+    const CACHE_KEY = "ff_usd_high_cache_final";
 
-  const SEED_ITEMS = [
-    { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-    { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
-    { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-  ];
+    const SEED_ITEMS = [
+      { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+      { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
+      { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+    ];
 
-  // ===== helpers =====
-  function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
-  function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY))||null; }catch{ return null; } }
-  function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
-  function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
+    /* ===== helpers ===== */
+    function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
+    function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY))||null; }catch{ return null; } }
+    function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
+    function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
 
-  // ===== Heatbar =====
-  function setUS30Pct(pct, sourceLabel){
-    const val=document.getElementById('hbVal');
-    const fill=document.getElementById('hbFill');
-    const src=document.getElementById('hbSrc');
-    if(!val||!fill) return;
+    /* ===== Heatbar / US30 % ===== */
+    function setUS30Pct(pct, sourceLabel){
+      const val=document.getElementById('hbVal');
+      const fill=document.getElementById('hbFill');
+      const src=document.getElementById('hbSrc');
+      if(!val||!fill) return;
 
-    const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
-    fill.classList.remove('pos','neg');
-    if(pct>=0){fill.classList.add('pos');val.style.color='#22c55e';}
-    else{fill.classList.add('neg');val.style.color='#ef4444';}
-    fill.style.width=w.toFixed(2)+'%';
-    val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
-    src.textContent = sourceLabel ? `• ${sourceLabel}` : '';
-  }
+      const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
+      fill.classList.remove('pos','neg');
+      if(pct>=0){fill.classList.add('pos');val.style.color='var(--pos)';}
+      else{fill.classList.add('neg');val.style.color='var(--neg)';}
+      fill.style.width=w.toFixed(2)+'%';
+      val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
+      src.textContent = sourceLabel || '';
+    }
 
-  let hbInterval = 180000;
-  async function fetchUS30(){
-    const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`, "DJI");
-    if (pct1 != null) { setUS30Pct(pct1, "DJI"); scheduleNext(true); return; }
+    let hbInterval = 180000; // 3m, backoff on fail
+    async function fetchUS30(){
+      const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`, "DJI");
+      if (pct1 != null) { setUS30Pct(pct1, "DJI"); scheduleNext(true); return; }
 
-    const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`, "DJI*");
-    if (pct2 != null) { setUS30Pct(pct2, "DJI*"); scheduleNext(true); return; }
+      const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`, "DJI*");
+      if (pct2 != null) { setUS30Pct(pct2, "DJI*"); scheduleNext(true); return; }
 
-    const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`, "DIA");
-    if (pct3 != null) { setUS30Pct(pct3, "DIA"); scheduleNext(true); return; }
+      const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`, "DIA");
+      if (pct3 != null) { setUS30Pct(pct3, "DIA"); scheduleNext(true); return; }
 
-    scheduleNext(false);
-  }
+      scheduleNext(false);
+    }
+    function scheduleNext(success){
+      hbInterval = success ? 180000 : Math.min(hbInterval * 1.7, 15*60*1000);
+      setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
+    }
+    async function getPctVia(url,label){
+      try{
+        const r = await fetch(url, { cache:"no-store" });
+        if(!r.ok) return null;
+        const data = await r.json();
+        const q = data?.quoteResponse?.result?.[0];
+        if(!q) return null;
+        if (typeof q.regularMarketChangePercent === "number") return q.regularMarketChangePercent;
+        if (typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number")
+          return ((q.regularMarketPrice - q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100;
+        return null;
+      }catch{ return null; }
+    }
+    async function getPctFromChart(url,label){
+      try{
+        const r = await fetch(url, { cache:"no-store" });
+        if(!r.ok) return null;
+        const data = await r.json();
+        const meta = data?.chart?.result?.[0]?.meta;
+        if(!meta) return null;
+        const last = meta.regularMarketPrice ?? meta.previousClose;
+        const prev = meta.chartPreviousClose ?? meta.previousClose;
+        if(typeof last==="number" && typeof prev==="number" && prev!==0)
+          return ((last-prev)/prev)*100;
+        return null;
+      }catch{ return null; }
+    }
 
-  function scheduleNext(success){
-    hbInterval = success ? 180000 : Math.min(hbInterval * 1.7, 15*60*1000);
-    setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
-  }
+    /* ===== render list ===== */
+    function render(items){
+      const list=document.getElementById('list');
+      const note=document.getElementById('note');
+      list.innerHTML='';
+      const tpl=document.getElementById('row');
+      const todayISO=new Date().toISOString().slice(0,10);
+      let todays=0;
 
-  async function getPctVia(url,label){
-    try{
-      const r = await fetch(url, { cache:"no-store" });
-      if(!r.ok) return null;
-      const data = await r.json();
-      const q = data?.quoteResponse?.result?.[0];
-      if(!q) return null;
-      if (typeof q.regularMarketChangePercent === "number") return q.regularMarketChangePercent;
-      if (typeof q.regularMarketPrice === "number" && typeof q.regularMarketPreviousClose === "number")
-        return ((q.regularMarketPrice - q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100;
-      return null;
-    }catch{ return null; }
-  }
+      for(const e of items){
+        const li=tpl.content.firstElementChild.cloneNode(true);
+        const dstr=e.datetime||"";
+        let isToday=false;
+        if(!isToday){
+          const dt=new Date(dstr);
+          if(!isNaN(dt)) isToday=dt.toISOString().slice(0,10)===todayISO;
+        }
+        if(isToday){ li.classList.add('today'); todays++; }
 
-  async function getPctFromChart(url,label){
-    try{
-      const r = await fetch(url, { cache:"no-store" });
-      if(!r.ok) return null;
-      const data = await r.json();
-      const meta = data?.chart?.result?.[0]?.meta;
-      if(!meta) return null;
-      const last = meta.regularMarketPrice ?? meta.previousClose;
-      const prev = meta.chartPreviousClose ?? meta.previousClose;
-      if(typeof last==="number" && typeof prev==="number" && prev!==0)
-        return ((last-prev)/prev)*100;
-      return null;
-    }catch{ return null; }
-  }
+        li.querySelector('.title').textContent=e.title;
+        const badges=li.querySelector('.badges');
+        const b1=document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
+        const b2=document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
 
-  // ===== render (news list) =====
-  function render(items){
-    const list=document.getElementById('list');
-    const note=document.getElementById('note');
-    list.innerHTML='';
-    const tpl=document.getElementById('row');
-    const todayISO=new Date().toISOString().slice(0,10);
-    let todays=0;
-
-    for(const e of items){
-      const li=tpl.content.firstElementChild.cloneNode(true);
-      const dstr=e.datetime||"";
-      let isToday=false;
-      if(!isToday){
-        const dt=new Date(dstr);
-        if(!isNaN(dt)) isToday=dt.toISOString().slice(0,10)===todayISO;
+        const dtTry=new Date(dstr);
+        const whenText=isNaN(dtTry)? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
+        li.querySelector('.when').textContent=whenText;
+        li.querySelector('.meta').textContent=e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+        list.appendChild(li);
       }
-      if(isToday){ li.classList.add('today'); todays++; }
 
-      li.querySelector('.title').textContent=e.title;
-      const badges=li.querySelector('.badges');
-      const b1=document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-      const b2=document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-      if(isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
-
-      const dtTry=new Date(dstr);
-      const whenText=isNaN(dtTry)? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
-      li.querySelector('.when').textContent=whenText;
-      li.querySelector('.meta').textContent=e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
-      list.appendChild(li);
+      note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+      document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
     }
 
-    note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
-    document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
-  }
-
-  // ===== main (load data) =====
-  (async function(){
-    let items=[];
-    try{
-      const r=await fetch(WORKER,{cache:"no-store"});
-      if(r.ok){
-        const payload=await r.json();
-        if(payload && payload.items) items=payload.items;
+    /* ===== load data ===== */
+    (async function(){
+      let items=[];
+      try{
+        const r=await fetch(WORKER,{cache:"no-store"});
+        if(r.ok){
+          const payload=await r.json();
+          if(payload && payload.items) items=payload.items;
+        }
+      }catch{}
+      if(!items.length){
+        const c=loadCache();
+        if(c?.items?.length) items=c.items;
       }
-    }catch{}
+      if(!items.length){ items=SEED_ITEMS; } else { saveCache(items); }
+      render(items);
+    })();
 
-    if(!items.length){
-      const c=loadCache();
-      if(c?.items?.length) items=c.items;
-    }
-    if(!items.length){
-      items=SEED_ITEMS;
-    }else{
-      saveCache(items);
-    }
-    render(items);
-  })();
-
-  // kick off
-  fetchUS30();
+    // start the gauge refresher
+    fetchUS30();
   </script>
 </body>
 </html>
