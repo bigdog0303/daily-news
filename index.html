@@ -3,31 +3,26 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>High-impact USD — This Week</title>
+<title>High-impact USD — Events</title>
 <meta name="theme-color" content="#0c0c0e" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <style>
 html,body{margin:0;padding:0;height:100%;background:#0c0c0e;color-scheme:dark;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
-.statusbar{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0);background:#0c0c0e;z-index:9999;pointer-events:none}
 :root{
   --bg:#0c0c0e;--text:#e9e9ee;--muted:#9fa0a8;
   --panel:#121316;--panel2:#17181c;--ring:#2a2b31;
   --badge:#1f2025;--accent:#ffd84a;--accent-ink:#201b07;
-  --accent-ring:#5a4b13;--high:#c63b3b;--ok:#22c55e;--bad:#ef4444;
+  --accent-ring:#5a4b13;--high:#c63b3b;
 }
 body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);overflow-x:hidden}
 header.top{padding:calc(8px + env(safe-area-inset-top,0)) 16px 10px;border-bottom:1px solid var(--ring);background:var(--bg)}
-h1{margin:0 6px 2px 0;font-size:28px;letter-spacing:.2px;font-weight:800;display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+h1{margin:0 0 2px;font-size:28px;letter-spacing:.2px;font-weight:800;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .small{color:var(--muted);font-size:12px}
-main{max-width:960px;margin:0 auto;padding:14px 12px 40px}
-
-/* tabs */
-.tabs{display:flex;gap:8px;margin:10px 0 2px}
-.tab{padding:6px 12px;border-radius:999px;border:1px solid var(--ring);background:var(--panel2);color:var(--text);cursor:pointer}
-.tab.active{background:var(--accent-ink);border-color:var(--accent-ring);color:#ffe899}
-
-/* list */
+.tabs{display:flex;gap:10px;margin:10px 0}
+.tab{padding:10px 18px;border-radius:999px;border:1px solid var(--ring);background:var(--panel2);color:#e1e1e6;cursor:pointer;font-weight:700}
+.tab.active{background:#23242a;border-color:#3a3b42}
+main{max-width:980px;margin:0 auto;padding:14px 12px 40px}
 .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--ring);color:#c9cad1;font-weight:600}
 ul{list-style:none;margin:0;padding:0}
 .item{display:flex;border-radius:22px;background:var(--panel2);border:1px solid var(--ring);margin:16px 0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35)}
@@ -39,16 +34,15 @@ ul{list-style:none;margin:0;padding:0}
 .badge.high::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--high)}
 .badge.today{border-color:var(--accent);background:var(--accent-ink);color:#ffe899}
 .when,.meta{font-size:14px;color:var(--muted)}
-.when{margin-bottom:6px}
 .item.today{background:linear-gradient(180deg,rgba(255,216,74,.08),rgba(0,0,0,0));outline:1px solid var(--accent-ring)}
 .item.today .left{background:var(--accent)}
 .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
+.err{color:#ff9b9b;margin-top:8px;text-align:center}
 
 /* heatbar */
 .heatmini{display:inline-flex;align-items:center;gap:10px;margin-left:16px;vertical-align:middle}
 .heatmini .badge{font-size:13px;color:var(--muted);font-weight:800;letter-spacing:.3px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring)}
-.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:58px;text-align:right}
-.heatmini .src{font-size:11px;color:#8b8c93;margin-left:6px}
+.heatmini .val{font-size:13px;font-variant-numeric:tabular-nums;min-width:50px;text-align:right}
 .heatmini .bar{position:relative;width:96px;height:10px;border-radius:999px;background:var(--panel2);border:1px solid var(--ring);overflow:hidden}
 .heatmini .zero{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#3a3b42}
 .heatmini .fill{position:absolute;top:0;bottom:0;transition:width .25s ease,left .25s ease,background .25s ease}
@@ -56,25 +50,18 @@ ul{list-style:none;margin:0;padding:0}
 .heatmini .fill.neg{right:50%;left:auto;background:#7a1f1f}
 
 /* calendar */
-#calWrap{margin-top:12px}
-.calHead{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 10px}
-.calHead h2{margin:0;font-size:18px;font-weight:800}
-.calNav{display:flex;gap:8px}
-.calBtn{padding:6px 10px;border-radius:10px;border:1px solid var(--ring);background:var(--panel2);cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.wd{font-size:12px;color:var(--muted);text-align:center;margin-bottom:6px}
-.cell{border:1px solid var(--ring);border-radius:12px;min-height:68px;background:var(--panel2);padding:8px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer}
-.cell.out{opacity:.35}
-.cell .d{font-size:12px;color:var(--muted)}
-.badgesm{align-self:flex-end;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--ring);background:var(--badge);color:#d7d7dc}
-.dot{width:6px;height:6px;border-radius:999px;background:var(--high);display:inline-block;margin-left:4px}
-.sel{outline:2px solid var(--accent-ring)}
-.dayEvents{margin-top:12px}
-.empty{color:var(--muted);text-align:center;border:1px dashed var(--ring);border-radius:12px;padding:12px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px}
+.cal-head .month{font-weight:800;letter-spacing:.3px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-cell{border:1px solid var(--ring);background:var(--panel2);border-radius:10px;min-height:90px;padding:8px;display:flex;flex-direction:column}
+.cal-dow{color:var(--muted);font-size:12px;text-align:center;margin:8px 0}
+.cal-date{font-weight:800;font-size:12px;color:#bfc0c7}
+.cal-tag{margin-top:6px;padding:4px 6px;border-radius:999px;border:1px solid var(--ring);background:#1f2025;font-size:11px;color:#dcdde3;width:max-content}
+.cal-tag.high{border-color:#814; background:#2a1518; color:#ffb3b3}
+.empty{opacity:.6}
 </style>
 </head>
 <body>
-<div class="statusbar" aria-hidden="true"></div>
 <header class="top">
   <div class="small" id="now"></div>
   <h1>
@@ -82,80 +69,64 @@ ul{list-style:none;margin:0;padding:0}
     <div class="heatmini">
       <span class="badge">US30</span>
       <div class="bar"><div class="zero"></div><div id="hbFill" class="fill"></div></div>
-      <span id="hbVal" class="val">—</span><span id="hbSrc" class="src"></span>
+      <span id="hbVal" class="val">+0.00%</span>
     </div>
   </h1>
   <div class="small" id="updated"></div>
   <div class="tabs">
-    <button id="tabList" class="tab active">List</button>
-    <button id="tabCal"  class="tab">Calendar</button>
+    <button class="tab active" id="tab-list">List</button>
+    <button class="tab" id="tab-cal">Calendar</button>
   </div>
 </header>
 
 <main>
-  <!-- LIST -->
-  <section id="listView">
-    <div class="note" id="note">Loading…</div>
+  <div class="note" id="note">Loading…</div>
+
+  <section id="list-view">
     <ul id="list"></ul>
-    <div class="footer">Data via ForexFactory (proxied)</div>
+    <div class="err" id="err" hidden></div>
   </section>
 
-  <!-- CALENDAR -->
-  <section id="calView" style="display:none">
-    <div id="calWrap">
-      <div class="calHead">
-        <h2 id="calTitle">Month</h2>
-        <div class="calNav">
-          <button class="calBtn" id="prevM">‹</button>
-          <button class="calBtn" id="todayM">Today</button>
-          <button class="calBtn" id="nextM">›</button>
-        </div>
-      </div>
-      <div class="grid" id="wdRow">
-        <div class="wd">Mon</div><div class="wd">Tue</div><div class="wd">Wed</div><div class="wd">Thu</div><div class="wd">Fri</div><div class="wd">Sat</div><div class="wd">Sun</div>
-      </div>
-      <div class="grid" id="calGrid"></div>
-      <div class="dayEvents" id="dayEvents"></div>
+  <section id="cal-view" style="display:none">
+    <div class="cal-head">
+      <div class="month" id="cal-month"></div>
     </div>
+    <div class="cal-dow">Mon · Tue · Wed · Thu · Fri · Sat · Sun</div>
+    <div class="cal-grid" id="cal-grid"></div>
   </section>
+
+  <div class="footer">Data via ForexFactory (through your Worker)</div>
 </main>
 
 <template id="row">
-  <li class="item">
-    <div class="left"></div>
-    <div class="content">
-      <h3 class="title"></h3>
-      <div class="badges"></div>
-      <div class="when"></div>
-      <div class="meta"></div>
-    </div>
-  </li>
+<li class="item">
+  <div class="left"></div>
+  <div class="content">
+    <h3 class="title"></h3>
+    <div class="badges"></div>
+    <div class="when"></div>
+    <div class="meta"></div>
+  </div>
+</li>
 </template>
 
 <script>
-// ===== CONFIG =====
-const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev";
-const CACHE_KEY = "ff_usd_high_cache_final";
+/* ====== CONFIG ====== */
+const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev"; // your Worker
+const CACHE_KEY = "ff_usd_cache_v2";
 
-// ===== Seeds for list fallback =====
-const SEED_ITEMS = [
-  { title:"ISM Manufacturing PMI",           datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-  { title:"ADP Non-Farm Employment Change",  datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
-  { title:"ISM Services PMI",                datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-];
-
-// ===== helpers =====
-function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
+/* ====== helpers ====== */
+const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(),items})); }catch{} }
 function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch{ return null; } }
-function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
-function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
-function ymd(d){ return d.toISOString().slice(0,10); }
+const fmtTime = (d)=> new Intl.DateTimeFormat([], {hour:'2-digit',minute:'2-digit'}).format(d);
+const fmtMonthLabel = (y,m)=> new Date(y,m-1,1).toLocaleDateString([], {month:'long', year:'numeric'});
+const fmtMD = (d)=> d.toLocaleDateString([], {month:'short', day:'2-digit'});
 
-// ===== Heatbar (unchanged) =====
-function setUS30Pct(pct, src){
+/* ====== US30 mini heatbar via Worker Yahoo proxy ====== */
+function setUS30Pct(pct){
   const val=document.getElementById('hbVal');
   const fill=document.getElementById('hbFill');
-  const s=document.getElementById('hbSrc');
   if(!val||!fill) return;
   const CAP=2, mag=Math.min(Math.abs(pct),CAP), half=50, w=(mag/CAP)*half;
   fill.classList.remove('pos','neg');
@@ -163,202 +134,182 @@ function setUS30Pct(pct, src){
   else{fill.classList.add('neg');val.style.color='#ef4444';}
   fill.style.width=w.toFixed(2)+'%';
   val.textContent=(pct>=0?'+':'')+pct.toFixed(2)+'%';
-  s.textContent = src ? `· ${src}` : '';
 }
-let hbInterval = 180000;
 async function fetchUS30(){
-  const q = `${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`;
-  const r = await tryPct(q);
-  if (r!=null){ setUS30Pct(r,"DJI"); hbInterval=180000; setTimeout(fetchUS30,hbInterval); return; }
-  const chart = `${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`;
-  const r2 = await tryChart(chart);
-  if (r2!=null){ setUS30Pct(r2,"DJI*"); hbInterval=180000; setTimeout(fetchUS30,hbInterval); return; }
-  const dia = `${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`;
-  const r3 = await tryPct(dia);
-  if (r3!=null){ setUS30Pct(r3,"DIA"); hbInterval=180000; setTimeout(fetchUS30,hbInterval); return; }
-  hbInterval=Math.min(hbInterval*1.7, 15*60*1000); setTimeout(fetchUS30,hbInterval);
+  try{
+    const target = encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?interval=1m");
+    const res = await fetch(`${WORKER}/?url=${target}`, {cache:'no-store'});
+    const data = await res.json();
+    const meta = data.chart?.result?.[0]?.meta;
+    if(meta){
+      const last = meta.regularMarketPrice, prev = meta.chartPreviousClose;
+      if(last && prev) setUS30Pct(((last-prev)/prev)*100);
+    }
+  }catch{}
 }
-async function tryPct(url){ try{const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; const d=await r.json(); const q=d?.quoteResponse?.result?.[0]; if(!q) return null;
-  if(typeof q.regularMarketChangePercent==="number") return q.regularMarketChangePercent;
-  if(typeof q.regularMarketPrice==="number" && typeof q.regularMarketPreviousClose==="number") return ((q.regularMarketPrice-q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100;
-  return null; }catch(_){return null;} }
-async function tryChart(url){ try{const r=await fetch(url,{cache:"no-store"}); if(!r.ok) return null; const d=await r.json(); const m=d?.chart?.result?.[0]?.meta; if(!m) return null;
-  const last=m.regularMarketPrice ?? m.previousClose; const prev=m.chartPreviousClose ?? m.previousClose;
-  if(typeof last==="number" && typeof prev==="number" && prev!==0) return ((last-prev)/prev)*100; return null;}catch(_){return null;} }
-fetchUS30();
+fetchUS30(); setInterval(fetchUS30, 60000);
 
-// ===== List render =====
-function renderList(items){
+/* ====== list renderer ====== */
+function renderList(items, noteTag=""){
   const list = document.getElementById('list');
   const note = document.getElementById('note');
-  list.innerHTML = '';
+  const err  = document.getElementById('err');
+
+  list.innerHTML='';
   const tpl = document.getElementById('row');
-  const todayISO = ymd(new Date()); let todays=0;
+  const todayISO = new Date().toISOString().slice(0,10);
+  let todays=0;
 
   for (const e of items){
     const li = tpl.content.firstElementChild.cloneNode(true);
-    const dstr = e.datetime || "";
-    let isToday = dstr.startsWith(todayISO);
-    if (!isToday){ const dt = new Date(dstr); if (!isNaN(dt)) isToday = ymd(dt)===todayISO; }
-    if (isToday){ li.classList.add('today'); todays++; }
-    li.querySelector('.title').textContent = e.title;
+    let dstr = e.datetime || `${e.date||''} ${e.time||''}`.trim();
+    const dt = new Date(dstr);
+    const isToday = !isNaN(dt) && dt.toISOString().slice(0,10)===todayISO;
+    if(isToday){ li.classList.add('today'); todays++; }
 
+    li.querySelector('.title').textContent = e.title||'Event';
     const badges = li.querySelector('.badges');
     const b1 = document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
     const b2 = document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
-    if (isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
+    if(isToday){ const b3=document.createElement('span'); b3.className='badge today'; b3.textContent='Today'; badges.appendChild(b3); }
 
-    const dtTry = new Date(dstr);
-    const whenText = isNaN(dtTry) ? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
-    li.querySelector('.when').textContent = whenText;
+    li.querySelector('.when').textContent = isNaN(dt) ? (e.date||dstr) : `${fmtMD(dt)} at ${fmtTime(dt)}`;
     li.querySelector('.meta').textContent = e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
     list.appendChild(li);
   }
-  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+
+  note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today.` + (noteTag?' '+noteTag:'');
   document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+
+  document.getElementById('err').hidden = items.length!==0;
+  if(items.length===0) document.getElementById('err').textContent='No USD high-impact events found.';
 }
 
-// ===== Calendar render =====
-let CAL_DATE = new Date(); // month anchor
-let ALL_ITEMS = [];        // items for current month
+/* ====== calendar renderer ====== */
+function renderCalendar(allItems, ym){ // ym: "YYYY-MM"
+  const [Y,M] = ym.split('-').map(n=>+n);
+  document.getElementById('cal-month').textContent = fmtMonthLabel(Y,M);
 
-function groupByDay(items){
-  const map = new Map();
-  for(const e of items){
-    const t = new Date(e.datetime||e.date||"");
-    if(isNaN(t)) continue;
-    const k = ymd(t);
-    if(!map.has(k)) map.set(k, []);
-    map.get(k).push(e);
+  // filter to month (server might have given aliases)
+  const start = new Date(Y,M-1,1);
+  const end   = new Date(Y,M,0,23,59,59);
+  const items = allItems.filter(e=>{
+    const t = new Date(e.datetime || `${e.date||''} ${e.time||''}`.trim());
+    return !isNaN(t) && t>=start && t<=end;
+  });
+
+  const grid = document.getElementById('cal-grid');
+  grid.innerHTML='';
+
+  // Build Mon–Sun grid starting at Monday
+  const first = new Date(Y,M-1,1);
+  const last  = new Date(Y,M,0);
+  const offset = (first.getDay()+6)%7; // Monday=0
+  const totalDays = last.getDate();
+
+  // Leading blanks
+  for(let i=0;i<offset;i++){
+    const c = document.createElement('div'); c.className='cal-cell empty'; grid.appendChild(c);
   }
-  return map;
-}
 
-function renderCalendar(){
-  const grid = document.getElementById('calGrid');
-  const title = document.getElementById('calTitle');
-  const dayPanel = document.getElementById('dayEvents');
-  grid.innerHTML = ''; dayPanel.innerHTML = '';
+  // Days
+  for(let d=1; d<=totalDays; d++){
+    const cell = document.createElement('div'); cell.className='cal-cell';
+    const label = document.createElement('div'); label.className='cal-date'; label.textContent = d;
+    cell.appendChild(label);
 
-  const y = CAL_DATE.getFullYear();
-  const m = CAL_DATE.getMonth();
-  title.textContent = new Date(y,m,1).toLocaleDateString([], {month:'long', year:'numeric'});
+    const dayStr = new Date(Y,M-1,d).toISOString().slice(0,10);
+    const todays = items.filter(e=>{
+      const t = new Date(e.datetime || `${e.date||''} ${e.time||''}`.trim());
+      return !isNaN(t) && t.toISOString().slice(0,10)===dayStr;
+    });
 
-  // month boundaries
-  const first = new Date(y, m, 1);
-  const last  = new Date(y, m+1, 0);
-  const byDay = groupByDay(ALL_ITEMS);
-
-  // Monday-based grid
-  const dow = (first.getDay() + 6) % 7; // Monday=0
-  const start = new Date(first); start.setDate(first.getDate() - dow);
-  // 6 rows x 7 = 42 cells
-  for (let i=0; i<42; i++){
-    const d = new Date(start); d.setDate(start.getDate()+i);
-    const isOut = d.getMonth() !== m;
-    grid.appendChild(dayCell(d, isOut, byDay));
+    for(const ev of todays){
+      const tag = document.createElement('div');
+      tag.className='cal-tag high';
+      const t = new Date(ev.datetime || `${ev.date||''} ${ev.time||''}`.trim());
+      tag.textContent = (isNaN(t) ? '' : (fmtTime(t)+' · ')) + (ev.title||'Event');
+      cell.appendChild(tag);
+    }
+    grid.appendChild(cell);
   }
 }
 
-function dayCell(dateObj, isOut, byDay){
-  const k = ymd(dateObj);
-  const arr = byDay.get(k)||[];
-  const el = document.createElement('div');
-  el.className = 'cell' + (isOut?' out':'');
-  el.innerHTML = `<div class="d">${dateObj.getDate()}</div>
-                  <div>${arr.length? `<span class="badgesm">${arr.length} event${arr.length>1?'s':''}<span class="dot"></span></span>`:''}</div>`;
-  el.onclick = ()=>{
-    document.querySelectorAll('.cell').forEach(c=>c.classList.remove('sel'));
-    el.classList.add('sel');
-    renderDayEvents(k, arr);
-  };
-  // auto-select today if in current month
-  const today = ymd(new Date());
-  if(k===today && !isOut) { setTimeout(()=>el.click(),0); }
-  return el;
+/* ====== data fetchers ====== */
+async function fetchAliases(){
+  // worker root returns aliases-merge
+  const r = await fetch(WORKER, {cache:'no-store'});
+  if(!r.ok) throw new Error('worker not ok');
+  return await r.json();
 }
 
-function renderDayEvents(key, arr){
-  const panel = document.getElementById('dayEvents');
-  const nice = new Date(key+'T00:00:00');
-  const title = nice.toLocaleDateString([], {weekday:'long', month:'short', day:'2-digit'});
-  if(!arr.length){
-    panel.innerHTML = `<div class="empty">No high-impact USD events on ${title}.</div>`;
-    return;
-  }
-  let html = `<h3 style="margin:10px 2px 8px;font-size:16px">${title}</h3>`;
-  html += '<ul style="margin-top:6px;padding:0">';
-  arr.sort((a,b)=> new Date(a.datetime)-new Date(b.datetime));
-  for(const e of arr){
-    const t = new Date(e.datetime||"");
-    const when = isNaN(t)? '' : `${hhmm(t)}`;
-    html += `<li class="item" style="margin:10px 0">
-      <div class="left" style="background:var(--accent)"></div>
-      <div class="content">
-        <h3 class="title" style="font-size:18px">${e.title}</h3>
-        <div class="badges"><span class="badge">USD</span><span class="badge high">High</span></div>
-        <div class="when">${when}</div>
-        <div class="meta">${e.actual?`Impact: High · ${e.actual}`:'Impact: High'}</div>
-      </div>
-    </li>`;
-  }
-  html += '</ul>';
-  panel.innerHTML = html;
+async function fetchMonth(ym){
+  // Try worker month first
+  try{
+    const r = await fetch(`${WORKER}?month=${ym}`, {cache:'no-store'});
+    if(r.ok){
+      const p = await r.json();
+      if (Array.isArray(p.items) && p.items.length) return {items:p.items, tag:"(month)"};
+    }
+  }catch{}
+  // Fallback: aliases then client filter
+  const p = await fetchAliases();
+  return {items:p.items||[], tag:"(filtered)"};
 }
 
-// ===== Tabs & month nav =====
-const tabList = document.getElementById('tabList');
-const tabCal  = document.getElementById('tabCal');
-const listView= document.getElementById('listView');
-const calView = document.getElementById('calView');
+/* ====== tabs ====== */
+function showList(){ 
+  document.getElementById('tab-list').classList.add('active');
+  document.getElementById('tab-cal').classList.remove('active');
+  document.getElementById('list-view').style.display='';
+  document.getElementById('cal-view').style.display='none';
+}
+function showCal(){
+  document.getElementById('tab-cal').classList.add('active');
+  document.getElementById('tab-list').classList.remove('active');
+  document.getElementById('list-view').style.display='none';
+  document.getElementById('cal-view').style.display='';
+}
 
-tabList.onclick = ()=>{ tabList.classList.add('active'); tabCal.classList.remove('active'); listView.style.display=''; calView.style.display='none'; };
-tabCal.onclick  = async ()=>{
-  tabCal.classList.add('active'); tabList.classList.remove('active'); listView.style.display='none'; calView.style.display='';
-  await loadMonth(CAL_DATE);
-  renderCalendar();
+/* ====== boot ====== */
+document.getElementById('now').textContent = fmtTime(new Date());
+
+document.getElementById('tab-list').onclick = async ()=>{
+  showList();
+  try{
+    const p = await fetchAliases();
+    const items = p.items||[];
+    saveCache(items);
+    renderList(items);
+  }catch{
+    const c = loadCache();
+    renderList(c?.items||[], '(cached)');
+  }
 };
 
-document.getElementById('prevM').onclick = async ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()-1); await loadMonth(CAL_DATE); renderCalendar(); };
-document.getElementById('nextM').onclick = async ()=>{ CAL_DATE.setMonth(CAL_DATE.getMonth()+1); await loadMonth(CAL_DATE); renderCalendar(); };
-document.getElementById('todayM').onclick= async ()=>{ CAL_DATE = new Date(); await loadMonth(CAL_DATE); renderCalendar(); };
-
-// ===== Loaders =====
-async function loadMonth(d){
-  const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+document.getElementById('tab-cal').onclick = async ()=>{
+  showCal();
+  const ym = new Date().toISOString().slice(0,7); // current YYYY-MM
   try{
-    const r = await fetch(`${WORKER}?month=${ym}`, { cache: "no-store" });
-    if (r.ok){
-      const payload = await r.json();
-      if (payload && payload.items) { ALL_ITEMS = payload.items; return; }
+    const {items, tag} = await fetchMonth(ym);
+    if(!items.length){
+      const c = loadCache();
+      renderCalendar(c?.items||[], ym);
+      document.getElementById('note').textContent = 'No month feed; showing cached or empty month.';
+    }else{
+      renderCalendar(items, ym);
+      document.getElementById('note').textContent = `Month view ${tag}`;
     }
-  }catch(_){}
-  // fallback: keep current items if worker month fails
-}
-
-document.getElementById('now').textContent =
-  new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(new Date());
-
-// Initial list load
-(async function(){
-  let items = [];
-  try{
-    const r = await fetch(WORKER, { cache: "no-store" });
-    if (r.ok){
-      const payload = await r.json();
-      if (payload && payload.items) items = payload.items;
-    }
-  }catch(_){}
-
-  if (!items.length){
+    document.getElementById('updated').textContent = 'Updated: ' + new Date().toLocaleString();
+  }catch{
     const c = loadCache();
-    if (c?.items?.length) items = c.items;
+    renderCalendar(c?.items||[], ym);
+    document.getElementById('note').textContent = 'Month view (cached)';
   }
-  if (!items.length){ items = SEED_ITEMS; }
+};
 
-  saveCache(items);
-  renderList(items);
-})();
+/* default: List on load */
+document.getElementById('tab-list').click();
 </script>
 </body>
 </html>
