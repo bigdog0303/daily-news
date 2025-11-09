@@ -1,86 +1,123 @@
-let currentWeekOffset = 0;
-let allData = [];
+const newsContainer = document.getElementById("newsContainer");
+const weekRangeEl = document.getElementById("weekRange");
 
-// Load data from JSON
-async function loadData() {
-  const res = await fetch("data/usd-high-impact.json");
-  const rawData = await res.json();
+let allNews = [];
+let currentWeekStart = getStartOfWeek(new Date());
 
-  allData = rawData.map(item => ({
-    ...item,
-    dateObj: new Date(`${item.date}T${item.time === "Tentative" ? "23:59" : item.time}`)
-  }));
+// Load and initialize
+fetch("data/usd-high-impact.json")
+  .then(res => res.json())
+  .then(data => {
+    allNews = data.map(item => ({
+      ...item,
+      dateObj: new Date(`${item.date}T${item.time === "Tentative" ? "00:00" : item.time}`)
+    }));
+    renderWeek(currentWeekStart);
+  });
 
-  renderWeek();
+document.getElementById("prevWeek").onclick = () => {
+  currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+  renderWeek(currentWeekStart);
+};
+
+document.getElementById("nextWeek").onclick = () => {
+  currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  renderWeek(currentWeekStart);
+};
+
+function renderWeek(startDate) {
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const weekEvents = allNews.filter(event => {
+    return event.dateObj >= startDate && event.dateObj <= endDate;
+  });
+
+  const grouped = groupByDate(weekEvents);
+
+  weekContainer(grouped, todayStr);
+
+  const startStr = startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const endStr = endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  weekRangeEl.textContent = `Mon, ${startStr} – Sun, ${endStr}`;
 }
 
-// Group events by date
 function groupByDate(events) {
-  return events.reduce((acc, item) => {
-    if (!acc[item.date]) acc[item.date] = [];
-    acc[item.date].push(item);
+  return events.reduce((acc, event) => {
+    const key = event.date;
+    acc[key] = acc[key] || [];
+    acc[key].push(event);
     return acc;
   }, {});
 }
 
-// Render current week
-function renderWeek() {
-  const start = new Date();
-  start.setDate(start.getDate() - start.getDay() + 1 + currentWeekOffset * 7); // Monday
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6); // Sunday
+function weekContainer(groupedEvents, todayStr) {
+  newsContainer.innerHTML = "";
 
-  const weekEvents = allData.filter(item => {
-    const d = item.dateObj;
-    return d >= start && d <= end;
-  });
-
-  // Set header range
-  const weekRange = `${start.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} – ${end.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}`;
-  document.getElementById("weekRange").textContent = weekRange;
-
-  // Group by date
-  const grouped = groupByDate(weekEvents);
-  const container = document.getElementById("newsContainer");
-  container.innerHTML = "";
-
-  Object.entries(grouped).sort().forEach(([date, items]) => {
+  Object.entries(groupedEvents).forEach(([date, events]) => {
     const block = document.createElement("div");
     block.className = "date-block";
 
-    const dateTitle = document.createElement("div");
-    dateTitle.className = "date-title";
-    dateTitle.textContent = date;
-    block.appendChild(dateTitle);
+    const title = document.createElement("div");
+    title.className = "date-title";
+    title.textContent = date;
+    block.appendChild(title);
 
-    items.forEach(item => {
-      const row = document.createElement("div");
-      row.className = "event-row";
+    events.forEach(ev => {
+      const isToday = ev.date === todayStr;
 
-      row.innerHTML = `
-        <span><strong>Time:</strong> ${item.time}</span>
-        <span><strong>Event:</strong> ${item.event}</span>
-        <span><strong>Impact:</strong> 🔴 ${item.impact}</span>
-        <span><strong>Forecast:</strong> ${item.forecast ?? '-'}</span>
+      const card = document.createElement("div");
+      card.className = "event-card";
+      if (isToday) card.classList.add("today");
+
+      const title = document.createElement("div");
+      title.className = "event-title";
+      title.textContent = ev.event;
+
+      const badgeRow = document.createElement("div");
+      badgeRow.innerHTML = `
+        <span class="badge usd">USD</span>
+        <span class="badge high">High</span>
+        ${isToday ? '<span class="badge today">Today</span>' : ''}
       `;
 
-      block.appendChild(row);
+      const time = document.createElement("div");
+      time.className = "event-line";
+      time.textContent = formatDateTime(ev.date, ev.time);
+
+      const impact = document.createElement("div");
+      impact.className = "event-line";
+      impact.textContent = `Impact: ${ev.impact} · Forecast: ${ev.forecast || "-"}`;
+
+      card.appendChild(title);
+      card.appendChild(badgeRow);
+      card.appendChild(time);
+      card.appendChild(impact);
+
+      block.appendChild(card);
     });
 
-    container.appendChild(block);
+    newsContainer.appendChild(block);
   });
 }
 
-// Navigation
-document.getElementById("prevWeek").addEventListener("click", () => {
-  currentWeekOffset--;
-  renderWeek();
-});
+function formatDateTime(dateStr, timeStr) {
+  if (timeStr === "Tentative") return `${formatDate(dateStr)} (Tentative)`;
+  const d = new Date(`${dateStr}T${timeStr}`);
+  const options = { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true };
+  return d.toLocaleString("en-US", options).replace(",", " at");
+}
 
-document.getElementById("nextWeek").addEventListener("click", () => {
-  currentWeekOffset++;
-  renderWeek();
-});
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+}
 
-// Start
-loadData();
+function getStartOfWeek(d) {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = date.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is Sunday
+  return new Date(date.setDate(diff));
+}
