@@ -1,68 +1,104 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Daily News — Next Week</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily News — Week Switcher</title>
   <style>
-    body{margin:0;background:#0b0f0c;color:#e6f0ea;font-family:system-ui,Arial}
+    :root {
+      --bg: #0b0f0c;
+      --card: #101a14;
+      --text: #e6f0ea;
+      --muted: #9fb9ac;
+      --accent: #4ade80;
+      --accent-dim: #2f7a50;
+      --border: #1b2a21;
+    }
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,Helvetica,sans-serif}
     .wrap{max-width:900px;margin:0 auto;padding:20px 16px 56px}
     .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     .title{font-size:28px;font-weight:700}
-    .btn{background:transparent;border:1px solid #2f7a50;color:#4ade80;padding:6px 10px;border-radius:8px;cursor:pointer}
-    .card{background:#101a14;border:1px solid #1b2a21;border-radius:12px;padding:14px 16px;margin-bottom:12px}
-    .muted{color:#9fb9ac}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{background:transparent;border:1px solid var(--accent-dim);color:var(--accent);padding:6px 10px;border-radius:8px;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+    .sub{color:var(--muted);margin:6px 0 14px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+    .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+    .event{font-size:16px}
+    .when{font-size:13px;color:var(--muted)}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="hdr">
-      <div class="title">Daily News — Next Week</div>
-      <button class="btn" id="refresh">Refresh</button>
+      <div class="title">Daily News — Week Switcher</div>
+      <div class="controls">
+        <button class="btn" id="prev">◀ Prev</button>
+        <button class="btn" id="this">This Week</button>
+        <button class="btn" id="next">Next ▶</button>
+        <button class="btn" id="refresh">Refresh</button>
+      </div>
     </div>
-    <div class="muted" id="meta"></div>
+    <div class="sub" id="range">Loading…</div>
     <div id="list"></div>
   </div>
 
   <script>
+    // EDIT THIS to your worker URL:
     const WORKER = 'https://green-haze-8240.mikaelalexiou.workers.dev/news';
 
+    let week = 1; // default: next week
+
     async function load() {
-      const meta = document.getElementById('meta');
+      const rangeEl = document.getElementById('range');
       const list = document.getElementById('list');
       list.innerHTML = '<div class="card">Loading…</div>';
 
       try {
-        const r = await fetch(WORKER + '?v=' + Date.now(), { cache: 'no-store' });
-        const j = await r.json();
+        const res = await fetch(`${WORKER}?week=${week}&v=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const j = await res.json();
 
-        meta.textContent = `Serving ${j?.serving_range?.from ?? '?'} → ${j?.serving_range?.to ?? '?'} (${j?.serving_range?.tz ?? ''}) • ${j?.count ?? 0} events • ${j?.version ?? ''}`;
+        rangeEl.textContent =
+          (j?.serving_range
+            ? `Showing ${j.serving_range.from} → ${j.serving_range.to} (${j.serving_range.tz}) • ${j.count ?? 0} events`
+            : 'Showing selected week') + (j?.version ? ` • ${j.version}` : '');
 
         list.innerHTML = '';
-        if (!j.items || !j.items.length) {
-          list.innerHTML = '<div class="card">No events for next week yet. Check back later.</div>';
+        const items = j?.items || [];
+        if (!items.length) {
+          list.innerHTML = '<div class="card">No events found for this week yet.</div>';
           return;
         }
-        j.items.forEach(it => {
+        for (const it of items) {
           const title = it.title || it.event || 'Event';
-          const when  = it.datetime || it.time || it.date || '';
-          const badge = it.impact || it.folder || it.importance || '—';
+          const time = it.datetime || it.time || it.date || '';
+          const impact = it.impact || it.folder || it.importance || '';
           const country = it.country || it.ccy || '';
-          const div = document.createElement('div');
-          div.className = 'card';
-          div.innerHTML = `<div style="display:flex;justify-content:space-between;gap:12px">
-            <div><div style="font-size:16px">${title}</div>
-            <div class="muted" style="font-size:13px">${when} ${country ? '• '+country : ''}</div></div>
-            <div class="muted" style="font-size:12px;align-self:flex-start;border:1px solid #1b2a21;border-radius:999px;padding:2px 8px">${badge}</div>
-          </div>`;
-          list.appendChild(div);
-        });
+          const row = document.createElement('div');
+          row.className = 'card';
+          row.innerHTML = `
+            <div class="row" style="justify-content:space-between">
+              <div>
+                <div class="event">${title}</div>
+                <div class="when">${time} ${country ? '• ' + country : ''}</div>
+              </div>
+              <div class="badge">${impact || '—'}</div>
+            </div>
+          `;
+          list.appendChild(row);
+        }
       } catch (e) {
-        list.innerHTML = `<div class="card">Load failed: ${e?.message || e}</div>`;
+        list.innerHTML = `<div class="card">Could not load news: ${e.message || e}</div>`;
       }
     }
 
+    document.getElementById('prev').addEventListener('click', () => { week -= 1; load(); });
+    document.getElementById('this').addEventListener('click', () => { week = 0; load(); });
+    document.getElementById('next').addEventListener('click', () => { week += 1; load(); });
     document.getElementById('refresh').addEventListener('click', load);
+
     load();
   </script>
 </body>
