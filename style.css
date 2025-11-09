@@ -1,4 +1,4 @@
-/* Reset and remove white space on all browsers */
+/* Reset and remove all default spacing */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,12 +7,15 @@
 
 html, body {
   height: 100%;
+  margin: 0;
+  padding: 0;
   background-color: #111;
   color: #eee;
   font-family: 'Helvetica Neue', sans-serif;
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
+
+  /* ✅ Prevent top white bar on iPhones with notch */
+  padding-top: env(safe-area-inset-top);
 }
 
 body {
@@ -35,6 +38,7 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
+/* Navigation Buttons */
 .week-nav {
   display: flex;
   justify-content: space-between;
@@ -52,6 +56,7 @@ h1 {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .week-nav span {
@@ -60,7 +65,7 @@ h1 {
   text-align: center;
 }
 
-/* News layout */
+/* Day block */
 .date-block {
   background-color: #1a1a1a;
   border-radius: 10px;
@@ -77,6 +82,7 @@ h1 {
   padding-bottom: 0.25rem;
 }
 
+/* Each row of event data */
 .event-row {
   display: flex;
   justify-content: space-between;
@@ -96,6 +102,7 @@ h1 {
   margin-bottom: 4px;
 }
 
+/* Mobile Layout */
 @media (max-width: 600px) {
   .event-row {
     flex-direction: column;
