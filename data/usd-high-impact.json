@@ -25,83 +25,83 @@
     "time": "Tentative",
     "event": "Unemployment Claims",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-14",
     "time": "Tentative",
     "event": "Core PPI m/m",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-14",
     "time": "Tentative",
     "event": "Core Retail Sales m/m",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-14",
     "time": "Tentative",
     "event": "PPI m/m",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-14",
     "time": "Tentative",
     "event": "Retail Sales m/m",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-19",
     "time": "14:00",
     "event": "FOMC Meeting Minutes",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-20",
     "time": "08:30",
     "event": "Unemployment Claims",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-21",
     "time": "09:45",
     "event": "Flash Manufacturing PMI",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-21",
     "time": "09:45",
     "event": "Flash Services PMI",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-26",
     "time": "08:30",
     "event": "Prelim GDP q/q",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-26",
     "time": "08:30",
     "event": "Unemployment Claims",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   },
   {
     "date": "2025-11-26",
     "time": "10:00",
     "event": "Core PCE Price Index m/m",
     "impact": "High",
-    "forecast": null
+    "forecast": "-"
   }
 ]
