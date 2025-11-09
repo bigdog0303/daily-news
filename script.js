@@ -3,40 +3,56 @@ let newsData = [];
 
 function loadJSON() {
   fetch("data/usd-high-impact.json")
-    .then(res => res.json())
-    .then(data => {
+    .then((res) => {
+      if (!res.ok) throw new Error("Failed to load JSON");
+      return res.json();
+    })
+    .then((data) => {
       newsData = data;
       renderWeek();
+    })
+    .catch((err) => {
+      console.error("Error loading JSON:", err);
+      document.getElementById("newsTable").innerHTML = `
+        <tr><td colspan="5">⚠️ Could not load data.</td></tr>
+      `;
     });
 }
 
 function renderWeek() {
   const today = new Date();
-  const start = new Date(today.setDate(today.getDate() - today.getDay() + (7 * currentWeekOffset)));
+  const start = getStartOfWeek(addWeeks(today, currentWeekOffset));
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
 
-  document.getElementById("weekRange").textContent = `${start.toDateString()} - ${end.toDateString()}`;
+  const weekRangeText = `${formatDate(start)} – ${formatDate(end)}`;
+  document.getElementById("weekRange").textContent = weekRangeText;
 
   const tbody = document.getElementById("newsTable");
   tbody.innerHTML = "";
 
-  const weekEvents = newsData.filter(event => {
-    const d = new Date(event.date);
-    return d >= start && d <= end;
+  const weekEvents = newsData.filter((event) => {
+    const eventDate = new Date(event.date);
+    return eventDate >= start && eventDate <= end;
   });
 
-  weekEvents.forEach(event => {
+  if (weekEvents.length === 0) {
     const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${event.date}</td>
-      <td>${event.time}</td>
-      <td>${event.event}</td>
-      <td>🔴 ${event.impact}</td>
-      <td>${event.forecast}</td>
-    `;
+    row.innerHTML = `<td colspan="5">📭 No high-impact USD news this week</td>`;
     tbody.appendChild(row);
-  });
+  } else {
+    weekEvents.forEach((event) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td data-label="Date">${event.date}</td>
+        <td data-label="Time">${event.time}</td>
+        <td data-label="Event">${event.event}</td>
+        <td data-label="Impact">🔴 ${event.impact}</td>
+        <td data-label="Forecast">${event.forecast}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
 }
 
 document.getElementById("prevWeek").addEventListener("click", () => {
@@ -48,5 +64,27 @@ document.getElementById("nextWeek").addEventListener("click", () => {
   currentWeekOffset += 1;
   renderWeek();
 });
+
+// Utilities
+function addWeeks(date, weeks) {
+  const newDate = new Date(date);
+  newDate.setDate(date.getDate() + weeks * 7);
+  return newDate;
+}
+
+function getStartOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // Sunday = 0
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday as first day
+  return new Date(d.setDate(diff));
+}
+
+function formatDate(dateObj) {
+  return dateObj.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 loadJSON();
