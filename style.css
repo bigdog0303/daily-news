@@ -1,4 +1,4 @@
-/* Reset and remove all default spacing */
+/* ========== RESET ========== */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,18 +7,12 @@
 
 html, body {
   height: 100%;
-  margin: 0;
-  padding: 0;
   background-color: #111;
   color: #eee;
-  font-family: 'Helvetica Neue', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  padding-top: env(safe-area-inset-top); /* fix white bar */
   overflow-x: hidden;
-
-  /* ✅ Prevent top white bar on iPhones with notch */
-  padding-top: env(safe-area-inset-top);
-}
-
-body {
+  margin: 0;
   padding: 1rem;
 }
 
@@ -27,7 +21,7 @@ main {
   margin: auto;
 }
 
-/* Header styles */
+/* ========== HEADER ========== */
 header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -38,13 +32,12 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
-/* Navigation Buttons */
 .week-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap;
   gap: 1rem;
+  flex-wrap: nowrap;
   margin-top: 0.5rem;
 }
 
@@ -54,9 +47,8 @@ h1 {
   background: #222;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  flex-shrink: 0;
 }
 
 .week-nav span {
@@ -65,50 +57,77 @@ h1 {
   text-align: center;
 }
 
-/* Day block */
+/* ========== EVENT BLOCKS ========== */
 .date-block {
-  background-color: #1a1a1a;
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  margin-bottom: 2rem;
 }
 
 .date-title {
   font-weight: bold;
   font-size: 1.1rem;
   margin-bottom: 0.75rem;
-  border-bottom: 1px solid #333;
-  padding-bottom: 0.25rem;
+  padding-left: 0.25rem;
 }
 
-/* Each row of event data */
-.event-row {
+/* Each event card */
+.event-card {
+  background-color: #1a1a1a;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
   display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
-  border-bottom: 1px solid #222;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-left: 0.25rem solid transparent;
 }
 
-.event-row:last-child {
-  border-bottom: none;
+/* Highlight "Today" */
+.event-card.today {
+  background-color: #222109;
+  border-left: 0.25rem solid #ffd500;
 }
 
-.event-row span {
-  flex: 1 1 40%;
-  min-width: 100px;
-  margin-bottom: 4px;
+/* Title */
+.event-title {
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
-/* Mobile Layout */
+/* Inline text rows */
+.event-line {
+  font-size: 0.95rem;
+  color: #ccc;
+}
+
+/* ========== BADGES ========== */
+.badge {
+  display: inline-block;
+  background: #333;
+  color: #fff;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  margin-right: 0.4rem;
+}
+
+.badge.today {
+  border: 1px solid #ffd500;
+  color: #ffd500;
+  background-color: transparent;
+}
+
+.badge.usd {
+  background-color: #555;
+}
+
+.badge.high {
+  background-color: #aa2222;
+}
+
+/* Responsive */
 @media (max-width: 600px) {
-  .event-row {
+  .week-nav {
     flex-direction: column;
-  }
-
-  .event-row span {
-    flex: 1 1 auto;
   }
 }
