@@ -1,103 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Daily News — USD High (Forex Factory)</title>
-  <style>
-    :root { --bg:#0b0f0c; --card:#101a14; --text:#e6f0ea; --muted:#9fb9ac; --accent:#4ade80; --accent-dim:#2f7a50; --border:#1b2a21; }
-    html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,Helvetica,sans-serif}
-    .wrap{max-width:900px;margin:0 auto;padding:20px 16px 56px}
-    .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .title{font-size:28px;font-weight:700}
-    .controls{display:flex;gap:8px;align-items:center}
-    .btn{background:transparent;border:1px solid var(--accent-dim);color:var(--accent);padding:6px 10px;border-radius:8px;cursor:pointer}
-    .btn:active{transform:translateY(1px)}
-    .sub{color:var(--muted);margin:6px 0 14px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px}
-    .row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
-    .badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
-    .event{font-size:16px}
-    .when{font-size:13px;color:var(--muted)}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>USD High-Impact News</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="hdr">
-      <div class="title">Daily News — USD High (Forex Factory)</div>
-      <div class="controls">
-        <button class="btn" id="prev">◀ Prev</button>
-        <button class="btn" id="this">This Week</button>
-        <button class="btn" id="next">Next ▶</button>
-        <button class="btn" id="refresh">Force Refresh</button>
+  <main>
+    <header>
+      <h1>USD High-Impact News</h1>
+      <div class="week-nav">
+        <button id="prevWeek">← Previous</button>
+        <span id="weekRange"></span>
+        <button id="nextWeek">Next →</button>
       </div>
-    </div>
-    <div class="sub" id="range">Loading…</div>
-    <div id="list"></div>
-  </div>
-
-  <script>
-    // Your worker URL:
-    const WORKER = 'https://green-haze-8240.mikaelalexiou.workers.dev/news';
-
-    let week = 1;     // 1 = next (default)
-    let force = 0;    // 0 normal, 1 force-refresh the worker→CDN
-
-    function labelForWeek(w) { return w<0 ? 'Last Week' : w>0 ? `Next Week (+${w})` : 'This Week'; }
-
-    async function load() {
-      const rangeEl = document.getElementById('range');
-      const list = document.getElementById('list');
-      list.innerHTML = '<div class="card">Loading…</div>';
-      try {
-        const url = `${WORKER}?week=${week}&refresh=${force}&v=${Date.now()}`;
-        const r = await fetch(url, { cache: 'no-store' });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const j = await r.json();
-
-        rangeEl.textContent = `${labelForWeek(week)} • ${j?.count ?? 0} events • ${j?.source || ''}${j?.endpoint ? ' • '+new URL(j.endpoint).hostname : ''}`;
-
-        list.innerHTML = '';
-        const items = j?.items || [];
-        if (!items.length) {
-          list.innerHTML = '<div class="card">No USD high-impact events for this week.</div>';
-          return;
-        }
-        items.forEach(it => {
-          const title = it.title || it.event || it.Event || 'Event';
-          const when  = it.datetime || it.time || it.date || it.Date || '';
-          const where = it.currency || it.ccy || it.country || 'USD';
-          const badge = it.impact || it.importance || it.folder || 'High';
-          const actual   = (it.Actual ?? it.actual) != null ? ` • Actual: ${it.Actual ?? it.actual}` : '';
-          const forecast = (it.Forecast ?? it.forecast) != null ? ` • Forecast: ${it.Forecast ?? it.forecast}` : '';
-          const previous = (it.Previous ?? it.previous) != null ? ` • Previous: ${it.Previous ?? it.previous}` : '';
-
-          const row = document.createElement('div');
-          row.className = 'card';
-          row.innerHTML = `
-            <div class="row" style="justify-content:space-between">
-              <div>
-                <div class="event">${title}</div>
-                <div class="when">${when} • ${where}${actual}${forecast}${previous}</div>
-              </div>
-              <div class="badge">${badge}</div>
-            </div>`;
-          list.appendChild(row);
-        });
-      } catch (e) {
-        list.innerHTML = `<div class="card">Could not load news: ${e.message}</div>`;
-      } finally {
-        force = 0; // reset after a force refresh
-      }
-    }
-
-    // controls
-    document.getElementById('prev').addEventListener('click', () => { week -= 1; load(); });
-    document.getElementById('this').addEventListener('click', () => { week = 0; load(); });
-    document.getElementById('next').addEventListener('click', () => { week += 1; load(); });
-    document.getElementById('refresh').addEventListener('click', () => { force = 1; load(); });
-
-    load();
-  </script>
+    </header>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Time</th><th>Event</th><th>Impact</th><th>Forecast</th>
+        </tr>
+      </thead>
+      <tbody id="newsTable">
+        <!-- Injected from script.js -->
+      </tbody>
+    </table>
+  </main>
+  <script src="script.js"></script>
 </body>
 </html>
