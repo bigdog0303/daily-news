@@ -6,13 +6,8 @@
   <title>Daily News — Week Switcher</title>
   <style>
     :root {
-      --bg: #0b0f0c;
-      --card: #101a14;
-      --text: #e6f0ea;
-      --muted: #9fb9ac;
-      --accent: #4ade80;
-      --accent-dim: #2f7a50;
-      --border: #1b2a21;
+      --bg: #0b0f0c; --card: #101a14; --text: #e6f0ea; --muted: #9fb9ac;
+      --accent: #4ade80; --accent-dim: #2f7a50; --border: #1b2a21;
     }
     html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,Helvetica,sans-serif}
     .wrap{max-width:900px;margin:0 auto;padding:20px 16px 56px}
@@ -45,10 +40,10 @@
   </div>
 
   <script>
-    // EDIT THIS to your worker URL:
+    // Set this to your worker URL:
     const WORKER = 'https://green-haze-8240.mikaelalexiou.workers.dev/news';
 
-    let week = 1; // default: next week
+    let week = 1; // default show NEXT week
 
     async function load() {
       const rangeEl = document.getElementById('range');
@@ -56,41 +51,46 @@
       list.innerHTML = '<div class="card">Loading…</div>';
 
       try {
-        const res = await fetch(`${WORKER}?week=${week}&v=${Date.now()}`, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const j = await res.json();
+        const r = await fetch(`${WORKER}?week=${week}&v=${Date.now()}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const j = await r.json();
 
         rangeEl.textContent =
           (j?.serving_range
-            ? `Showing ${j.serving_range.from} → ${j.serving_range.to} (${j.serving_range.tz}) • ${j.count ?? 0} events`
-            : 'Showing selected week') + (j?.version ? ` • ${j.version}` : '');
+            ? `Showing ${j.serving_range.from} → ${j.serving_range.to} (${j?.serving_range?.tz || 'America/Toronto'}) • ${j?.count ?? 0} events`
+            : 'Showing selected week') + (j?.source ? ` • ${j.source}` : '');
 
         list.innerHTML = '';
         const items = j?.items || [];
         if (!items.length) {
-          list.innerHTML = '<div class="card">No events found for this week yet.</div>';
+          list.innerHTML = '<div class="card">No events found for this week.</div>';
           return;
         }
-        for (const it of items) {
-          const title = it.title || it.event || 'Event';
-          const time = it.datetime || it.time || it.date || '';
-          const impact = it.impact || it.folder || it.importance || '';
-          const country = it.country || it.ccy || '';
+
+        items.forEach(it => {
+          const title = it.Event || it.Category || it.Title || 'Event';
+          const when  = it.Date || it.DateUtc || '';
+          const badge = it.Importance || it.Severity || '—';
+          const country = it.Country || it.Currency || '';
+          const actual = (it.Actual !== undefined && it.Actual !== null) ? ` • Actual: ${it.Actual}` : '';
+          const forecast = (it.Forecast !== undefined && it.Forecast !== null) ? ` • Forecast: ${it.Forecast}` : '';
+          const previous = (it.Previous !== undefined && it.Previous !== null) ? ` • Previous: ${it.Previous}` : '';
+
           const row = document.createElement('div');
           row.className = 'card';
           row.innerHTML = `
             <div class="row" style="justify-content:space-between">
               <div>
                 <div class="event">${title}</div>
-                <div class="when">${time} ${country ? '• ' + country : ''}</div>
+                <div class="when">${when} ${country ? '• ' + country : ''}${actual}${forecast}${previous}</div>
               </div>
-              <div class="badge">${impact || '—'}</div>
+              <div class="badge">${badge}</div>
             </div>
           `;
           list.appendChild(row);
-        }
+        });
       } catch (e) {
-        list.innerHTML = `<div class="card">Could not load news: ${e.message || e}</div>`;
+        list.innerHTML = `<div class="card">Could not load news: ${e.message}</div>`;
       }
     }
 
