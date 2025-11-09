@@ -5,10 +5,16 @@
   padding: 0;
 }
 
-body {
-  font-family: 'Helvetica Neue', sans-serif;
+html, body {
+  height: 100%;
   background-color: #111;
   color: #eee;
+  font-family: 'Helvetica Neue', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Remove white space at top */
+body {
   padding: 1rem;
 }
 
@@ -17,6 +23,7 @@ main {
   margin: auto;
 }
 
+/* Header styles */
 header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -29,10 +36,11 @@ h1 {
 
 .week-nav {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 1rem;
-  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 .week-nav button {
@@ -47,14 +55,24 @@ h1 {
 
 .week-nav span {
   font-size: 1.1rem;
+  flex-grow: 1;
+  text-align: center;
 }
 
+/* News layout */
 .date-block {
   background-color: #1a1a1a;
   border-radius: 10px;
   margin-bottom: 1.5rem;
   padding: 1rem;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  transition: background-color 0.3s;
+}
+
+.date-block.highlight {
+  background-color: #2a2a2a;
+  border: 1px solid #ff4040;
+  box-shadow: 0 0 10px rgba(255, 64, 64, 0.5);
 }
 
 .date-title {
