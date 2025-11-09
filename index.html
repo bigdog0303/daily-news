@@ -3,12 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Daily News — Week Switcher</title>
+  <title>Daily News — USD High (Forex Factory)</title>
   <style>
-    :root {
-      --bg: #0b0f0c; --card: #101a14; --text: #e6f0ea; --muted: #9fb9ac;
-      --accent: #4ade80; --accent-dim: #2f7a50; --border: #1b2a21;
-    }
+    :root { --bg:#0b0f0c; --card:#101a14; --text:#e6f0ea; --muted:#9fb9ac;
+            --accent:#4ade80; --accent-dim:#2f7a50; --border:#1b2a21; }
     html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,Arial,Helvetica,sans-serif}
     .wrap{max-width:900px;margin:0 auto;padding:20px 16px 56px}
     .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -27,7 +25,7 @@
 <body>
   <div class="wrap">
     <div class="hdr">
-      <div class="title">Daily News — Week Switcher</div>
+      <div class="title">Daily News — USD High (Forex Factory)</div>
       <div class="controls">
         <button class="btn" id="prev">◀ Prev</button>
         <button class="btn" id="this">This Week</button>
@@ -40,10 +38,14 @@
   </div>
 
   <script>
-    // Set this to your worker URL:
+    // Set to your Worker URL
     const WORKER = 'https://green-haze-8240.mikaelalexiou.workers.dev/news';
+    // week: -1 = last, 0 = this, 1 = next
+    let week = 1;
 
-    let week = 1; // default show NEXT week
+    function labelForWeek(w) {
+      return w < 0 ? `Last Week` : w > 0 ? `Next Week (+${w})` : `This Week`;
+    }
 
     async function load() {
       const rangeEl = document.getElementById('range');
@@ -55,26 +57,23 @@
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         const j = await r.json();
 
-        rangeEl.textContent =
-          (j?.serving_range
-            ? `Showing ${j.serving_range.from} → ${j.serving_range.to} (${j?.serving_range?.tz || 'America/Toronto'}) • ${j?.count ?? 0} events`
-            : 'Showing selected week') + (j?.source ? ` • ${j.source}` : '');
+        rangeEl.textContent = `${labelForWeek(week)} • ${j?.count ?? 0} events • ${j?.source || ''}`;
 
         list.innerHTML = '';
         const items = j?.items || [];
         if (!items.length) {
-          list.innerHTML = '<div class="card">No events found for this week.</div>';
+          list.innerHTML = '<div class="card">No USD high-impact events for this week.</div>';
           return;
         }
 
         items.forEach(it => {
-          const title = it.Event || it.Category || it.Title || 'Event';
-          const when  = it.Date || it.DateUtc || '';
-          const badge = it.Importance || it.Severity || '—';
-          const country = it.Country || it.Currency || '';
-          const actual = (it.Actual !== undefined && it.Actual !== null) ? ` • Actual: ${it.Actual}` : '';
-          const forecast = (it.Forecast !== undefined && it.Forecast !== null) ? ` • Forecast: ${it.Forecast}` : '';
-          const previous = (it.Previous !== undefined && it.Previous !== null) ? ` • Previous: ${it.Previous}` : '';
+          const title = it.title || it.event || it.Event || 'Event';
+          const when  = it.datetime || it.time || it.date || it.Date || '';
+          const badge = it.impact || it.importance || it.folder || 'High';
+          const where = it.currency || it.country || it.ccy || 'USD';
+          const actual = (it.Actual ?? it.actual ?? '') !== '' ? ` • Actual: ${it.Actual ?? it.actual}` : '';
+          const forecast = (it.Forecast ?? it.forecast ?? '') !== '' ? ` • Forecast: ${it.Forecast ?? it.forecast}` : '';
+          const previous = (it.Previous ?? it.previous ?? '') !== '' ? ` • Previous: ${it.Previous ?? it.previous}` : '';
 
           const row = document.createElement('div');
           row.className = 'card';
@@ -82,7 +81,7 @@
             <div class="row" style="justify-content:space-between">
               <div>
                 <div class="event">${title}</div>
-                <div class="when">${when} ${country ? '• ' + country : ''}${actual}${forecast}${previous}</div>
+                <div class="when">${when} • ${where}${actual}${forecast}${previous}</div>
               </div>
               <div class="badge">${badge}</div>
             </div>
