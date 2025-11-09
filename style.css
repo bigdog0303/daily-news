@@ -1,4 +1,4 @@
-/* Reset + Layout */
+/* 🌙 Dark Theme + Mobile Responsive */
 * {
   box-sizing: border-box;
 }
@@ -29,6 +29,8 @@ header h1 {
   justify-content: space-between;
   align-items: center;
   margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .week-nav button {
@@ -65,13 +67,8 @@ td {
   background-color: #1b1b1b;
 }
 
-/* Mobile Responsiveness */
+/* 📱 Mobile Styles */
 @media (max-width: 768px) {
-  .week-nav {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
   table, thead, tbody, th, td, tr {
     display: block;
     width: 100%;
