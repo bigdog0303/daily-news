@@ -87,7 +87,7 @@ function renderNews(data) {
           ${isToday(event.date) ? '<span class="badge today">Today</span>' : ''}
         </div>
         <div class="event-line">${formatDisplayDate(event.date)} at ${formatDisplayTime(event.time)}</div>
-        <div class="event-line">Impact: High · ${event.forecast}</div>
+        <div class="event-line">Impact: High · ${event.forecast || "-"}</div>
       `;
       block.appendChild(card);
     });
@@ -104,6 +104,12 @@ document.getElementById("prevWeek").addEventListener("click", () => {
 
 document.getElementById("nextWeek").addEventListener("click", () => {
   currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  updateWeekRangeDisplay(currentWeekStart);
+  loadData().then(renderNews);
+});
+
+document.getElementById("todayWeek").addEventListener("click", () => {
+  currentWeekStart = getMonday(new Date());
   updateWeekRangeDisplay(currentWeekStart);
   loadData().then(renderNews);
 });
