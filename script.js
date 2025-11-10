@@ -1,55 +1,58 @@
-const weekRange = document.getElementById("weekRange");
-const newsContainer = document.getElementById("newsContainer");
-
 let currentWeekStart = getMonday(new Date());
+let newsData = [];
 
-function getMonday(d) {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(date.setDate(diff));
+document.getElementById("prevWeek").addEventListener("click", () => {
+  currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+  updateWeekRangeDisplay(currentWeekStart);
+  renderNews(newsData);
+});
+
+document.getElementById("nextWeek").addEventListener("click", () => {
+  currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  updateWeekRangeDisplay(currentWeekStart);
+  renderNews(newsData);
+});
+
+document.getElementById("todayWeek").addEventListener("click", () => {
+  currentWeekStart = getMonday(new Date());
+  updateWeekRangeDisplay(currentWeekStart);
+  renderNews(newsData);
+});
+
+function getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when Sunday
+  return new Date(d.setDate(diff));
 }
 
-function formatDate(date) {
-  return date.toISOString().split('T')[0];
-}
-
-function formatDisplayDate(dateStr) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
-}
-
-function formatDisplayTime(time) {
-  if (time === 'Tentative') return 'Tentative';
-  const [hour, minute] = time.split(':');
-  const date = new Date();
-  date.setHours(hour, minute);
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+function formatDateRange(startDate) {
+  const endDate = new Date(startDate);
+  endDate.setDate(startDate.getDate() + 6);
+  const options = { month: 'short', day: 'numeric' };
+  return `Mon, ${startDate.toLocaleDateString('en-US', options)} – Sun, ${endDate.toLocaleDateString('en-US', options)}`;
 }
 
 function updateWeekRangeDisplay(startDate) {
-  const endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + 6);
-  const options = { month: 'short', day: 'numeric' };
-  weekRange.textContent = `Mon, ${startDate.toLocaleDateString('en-US', options)} – Sun, ${endDate.toLocaleDateString('en-US', options)}`;
+  const rangeText = formatDateRange(startDate);
+  document.getElementById("weekRange").textContent = rangeText;
 }
 
-function isToday(dateStr) {
-  const today = new Date();
-  const d = new Date(dateStr);
-  return d.toDateString() === today.toDateString();
-}
-
-async function loadData() {
-  const res = await fetch("data/usd-high-impact.json");
-  const data = await res.json();
-  return data;
+function loadData() {
+  return fetch('data/usd-high-impact.json')
+    .then(response => response.json())
+    .then(data => {
+      newsData = data;
+      return data;
+    });
 }
 
 function renderNews(data) {
-  newsContainer.innerHTML = "";
+  const tbody = document.getElementById("newsTable");
+  tbody.innerHTML = '';
+
   const weekStart = new Date(currentWeekStart);
-  const weekEnd = new Date(currentWeekStart);
+  const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
 
   const grouped = {};
@@ -63,57 +66,57 @@ function renderNews(data) {
 
   const sortedDates = Object.keys(grouped).sort();
 
-  for (const date of sortedDates) {
-    const block = document.createElement("div");
-    block.className = "date-block";
+  if (sortedDates.length === 0) {
+    const noRow = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 5;
+    td.textContent = "No high-impact events this week.";
+    td.style.textAlign = "center";
+    noRow.appendChild(td);
+    tbody.appendChild(noRow);
+    return;
+  }
 
-    const dateTitle = document.createElement("div");
-    dateTitle.className = "date-title";
-    dateTitle.textContent = date;
-    block.appendChild(dateTitle);
+  sortedDates.forEach(date => {
+    const dateRow = document.createElement('tr');
+    const dateCell = document.createElement('td');
+    dateCell.colSpan = 5;
+    dateCell.classList.add('date-header');
+    dateCell.textContent = date;
+    dateRow.appendChild(dateCell);
+    tbody.appendChild(dateRow);
 
     grouped[date].forEach(event => {
-      const card = document.createElement("div");
-      card.className = "event-card";
-      if (isToday(event.date)) {
-        card.classList.add("today");
-      }
+      const row = document.createElement('tr');
 
-      card.innerHTML = `
-        <div class="event-title">${event.event}</div>
-        <div>
-          <span class="badge usd">USD</span>
-          <span class="badge high">High</span>
-          ${isToday(event.date) ? '<span class="badge today">Today</span>' : ''}
-        </div>
-        <div class="event-line">${formatDisplayDate(event.date)} at ${formatDisplayTime(event.time)}</div>
-        <div class="event-line">Impact: High · ${event.forecast || "-"}</div>
-      `;
-      block.appendChild(card);
+      const tdDate = document.createElement('td');
+      tdDate.textContent = event.date;
+
+      const tdTime = document.createElement('td');
+      tdTime.textContent = event.time;
+
+      const tdEvent = document.createElement('td');
+      tdEvent.textContent = event.event;
+
+      const tdImpact = document.createElement('td');
+      tdImpact.innerHTML = `🔴 ${event.impact}`;
+
+      const tdForecast = document.createElement('td');
+      tdForecast.textContent = event.forecast;
+
+      row.appendChild(tdDate);
+      row.appendChild(tdTime);
+      row.appendChild(tdEvent);
+      row.appendChild(tdImpact);
+      row.appendChild(tdForecast);
+
+      tbody.appendChild(row);
     });
-
-    newsContainer.appendChild(block);
-  }
+  });
 }
 
-document.getElementById("prevWeek").addEventListener("click", () => {
-  currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+// Initial load
+loadData().then(() => {
   updateWeekRangeDisplay(currentWeekStart);
-  loadData().then(renderNews);
+  renderNews(newsData);
 });
-
-document.getElementById("nextWeek").addEventListener("click", () => {
-  currentWeekStart.setDate(currentWeekStart.getDate() + 7);
-  updateWeekRangeDisplay(currentWeekStart);
-  loadData().then(renderNews);
-});
-
-document.getElementById("todayWeek").addEventListener("click", () => {
-  currentWeekStart = getMonday(new Date());
-  updateWeekRangeDisplay(currentWeekStart);
-  loadData().then(renderNews);
-});
-
-// Init
-updateWeekRangeDisplay(currentWeekStart);
-loadData().then(renderNews);
