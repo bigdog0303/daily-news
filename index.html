@@ -27,17 +27,11 @@
     }
 
     h1{
-      margin:0 0 4px;
+      margin:0;
       font-size:30px;
       line-height:1.05;
       letter-spacing:-.02em;
       font-weight:900;
-    }
-
-    .subtitle{
-      margin:0;
-      font-size:13px;
-      color:var(--muted);
     }
 
     .weeknav{
@@ -94,7 +88,28 @@
     main{max-width:900px;margin:0 auto;padding:12px 16px 36px}
     .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel)}
     ul{list-style:none;margin:0;padding:0}
-    .item{display:flex;border-radius:22px;background:var(--panel);border:1px solid var(--ring);margin:16px 0;overflow:hidden;transition:border-color .2s ease,box-shadow .2s ease}
+
+    .dayrow{
+      margin-top:20px;
+      margin-bottom:4px;
+      padding:2px 2px;
+      font-size:13px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .dayrow span{
+      font-weight:600;
+    }
+    .dayrow .line{
+      flex:1;
+      height:1px;
+      background:var(--ring);
+      opacity:.85;
+    }
+
+    .item{display:flex;border-radius:22px;background:var(--panel);border:1px solid var(--ring);margin:10px 0;overflow:hidden;transition:border-color .2s ease,box-shadow .2s ease}
     .left{width:10px;background:var(--ring);transition:background .2s ease}
     .content{flex:1;padding:20px 18px 16px}
     .title{margin:0 0 10px;font-size:28px;font-weight:900;letter-spacing:-.02em}
@@ -120,6 +135,8 @@
     <div class="wrap">
       <div class="toprow">
         <div>
+          <h1>High-impact USD events.</h1>
+        </div>
         <div class="weeknav">
           <button id="prevWeek" class="navbtn" aria-label="Previous week">‹</button>
           <div id="weekLabel" class="weeklabel">Week</div>
@@ -244,8 +261,15 @@
     ];
 
     /* ===== helpers ===== */
-    function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
-    function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'numeric', minute:'2-digit'}).format(dt); }
+    function monthDay(dt){
+      return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt);
+    }
+    function weekdayMonthDay(dt){
+      return new Intl.DateTimeFormat([], {weekday:'short', month:'short', day:'2-digit'}).format(dt);
+    }
+    function hhmm(dt){
+      return new Intl.DateTimeFormat([], {hour:'numeric', minute:'2-digit'}).format(dt);
+    }
 
     /* ===== Heatbar / US30 % (kept from your original) ===== */
     const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev/";
@@ -319,13 +343,34 @@
       const todayISO=new Date().toISOString().slice(0,10);
       let todays=0;
 
-      for(const e of items){
+      // sort items by datetime
+      const sorted = [...items].sort((a,b) => {
+        const da = new Date(a.datetime || 0).getTime();
+        const db = new Date(b.datetime || 0).getTime();
+        return da - db;
+      });
+
+      let lastDayKey = null;
+
+      for(const e of sorted){
+        const dstr = e.datetime || "";
+        const dt = new Date(dstr);
+        const dayKey = !isNaN(dt) ? dt.toISOString().slice(0,10) : null;
+
+        // day divider
+        if(dayKey && dayKey !== lastDayKey){
+          lastDayKey = dayKey;
+          const dayLi = document.createElement('li');
+          dayLi.className = 'dayrow';
+          dayLi.innerHTML = `<span>${weekdayMonthDay(dt)}</span><div class="line"></div>`;
+          list.appendChild(dayLi);
+        }
+
         const li=tpl.content.firstElementChild.cloneNode(true);
-        const dstr=e.datetime||"";
+
         let isToday=false;
-        const dt=new Date(dstr);
-        if(!isNaN(dt)) isToday = dt.toISOString().slice(0,10)===todayISO;
-        if(isToday){ li.classList.add('today'); todays++; }
+        if(dayKey && dayKey === todayISO){ isToday = true; todays++; }
+        if(isToday){ li.classList.add('today'); }
 
         li.querySelector('.title').textContent=e.title;
 
@@ -375,7 +420,6 @@
         const w=WEEKS[i];
         if(w.start <= today && today <= w.end) return i;
       }
-      // default to first week if today isn't inside any defined range
       return 0;
     }
 
