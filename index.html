@@ -9,14 +9,71 @@
     :root{
       --bg:#0b0f14; --text:#e7edf3; --muted:#9fb0c3; --ring:#262b33; --panel:#121821;
       --chip:#1b1f27; --hi:#f87171; --pos:#22c55e; --neg:#ef4444; --track:#2a2f38;
+      --nav:#181d25; --nav-accent:#2563eb;
     }
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,Segoe UI,Roboto}
 
     /* ===== TOP ===== */
-    header{padding:20px 16px 8px;border-bottom:1px solid var(--ring)}
+    header{padding:18px 16px 10px;border-bottom:1px solid var(--ring)}
     .wrap{max-width:900px;margin:0 auto}
-    h1{margin:0 0 14px;font-size:34px;line-height:1.05;letter-spacing:-.02em;font-weight:900}
+
+    .toprow{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:10px;
+    }
+
+    h1{
+      margin:0 0 4px;
+      font-size:30px;
+      line-height:1.05;
+      letter-spacing:-.02em;
+      font-weight:900;
+    }
+
+    .subtitle{
+      margin:0;
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .weeknav{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--nav);
+      border:1px solid var(--ring);
+      white-space:nowrap;
+      flex-shrink:0;
+    }
+
+    .navbtn{
+      border:none;
+      background:transparent;
+      color:var(--muted);
+      font-size:16px;
+      padding:4px 6px;
+      cursor:pointer;
+      border-radius:999px;
+      transition:background .15s ease,color .15s ease,opacity .15s ease;
+    }
+    .navbtn:hover{background:#11151c;color:var(--text);}
+    .navbtn.disabled{
+      opacity:.35;
+      cursor:default;
+      pointer-events:none;
+    }
+
+    .weeklabel{
+      font-size:13px;
+      font-weight:600;
+      color:#d6e1f5;
+    }
 
     .metricline{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
     .chip{background:var(--chip);border:1px solid var(--ring);border-radius:16px;padding:8px 16px;font-weight:900;font-size:22px}
@@ -37,21 +94,42 @@
     main{max-width:900px;margin:0 auto;padding:12px 16px 36px}
     .note{display:flex;align-items:center;justify-content:center;min-height:48px;margin:14px 0 12px;padding:10px 14px;border-radius:14px;background:var(--panel)}
     ul{list-style:none;margin:0;padding:0}
-    .item{display:flex;border-radius:22px;background:var(--panel);border:1px solid var(--ring);margin:16px 0;overflow:hidden}
-    .left{width:10px;background:var(--ring)}
+    .item{display:flex;border-radius:22px;background:var(--panel);border:1px solid var(--ring);margin:16px 0;overflow:hidden;transition:border-color .2s ease,box-shadow .2s ease}
+    .left{width:10px;background:var(--ring);transition:background .2s ease}
     .content{flex:1;padding:20px 18px 16px}
     .title{margin:0 0 10px;font-size:28px;font-weight:900;letter-spacing:-.02em}
     .badges{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
-    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:800;background:#161a20;border:1px solid var(--ring)}
+    .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-weight:800;background:#161a20;border:1px solid var(--ring);font-size:13px}
     .badge.high:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--hi)}
     .when,.meta{font-size:15px;color:var(--muted)}
+
+    /* highlight today */
+    .item.today{
+      border-color:#38bdf8;
+      box-shadow:0 0 0 1px rgba(56,189,248,.8);
+    }
+    .item.today .left{
+      background:#0ea5e9;
+    }
+
     .footer{margin-top:22px;text-align:center;color:var(--muted);font-size:12px}
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <h1>High-impact USD events for this week.</h1>
+      <div class="toprow">
+        <div>
+          <h1>High-impact USD events.</h1>
+          <p class="subtitle">Scroll the list, flip weeks with the arrows, and watch today’s events highlight.</p>
+        </div>
+        <div class="weeknav">
+          <button id="prevWeek" class="navbtn" aria-label="Previous week">‹</button>
+          <div id="weekLabel" class="weeklabel">Week</div>
+          <button id="nextWeek" class="navbtn" aria-label="Next week">›</button>
+        </div>
+      </div>
+
       <div class="metricline">
         <div class="chip">US30</div>
         <div class="gauge">
@@ -69,7 +147,7 @@
     <div class="wrap">
       <div class="note" id="note">Loading…</div>
       <ul id="list"></ul>
-      <div class="footer">Data via ForexFactory (proxied)</div>
+      <div class="footer">Static USD calendar data (based on ForexFactory screenshots).</div>
     </div>
   </main>
 
@@ -86,23 +164,95 @@
   </template>
 
   <script>
-    /* ===== CONFIG ===== */
-    const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev/";  // your working worker
-    const CACHE_KEY = "ff_usd_high_cache_final";
-
-    const SEED_ITEMS = [
-      { title:"ISM Manufacturing PMI", datetime:"2025-11-03T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
-      { title:"ADP Non-Farm Employment Change", datetime:"2025-11-05T08:15:00-05:00", impact:"High", currency:"USD", actual:"" },
-      { title:"ISM Services PMI", datetime:"2025-11-05T10:00:00-05:00", impact:"High", currency:"USD", actual:"" },
+    /* ===== STATIC WEEK DATA (from screenshots) ===== */
+    const WEEKS = [
+      {
+        label: "Nov 16 – Nov 22, 2025",
+        start: "2025-11-16",
+        end:   "2025-11-22",
+        items: [
+          { title:"FOMC Meeting Minutes", datetime:"2025-11-19T14:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"Unemployment Claims",  datetime:"2025-11-20T00:00:00-05:00", impact:"High", currency:"USD", timeLabel:"Tentative" },
+          { title:"Flash Manufacturing PMI", datetime:"2025-11-21T09:45:00-05:00", impact:"High", currency:"USD" },
+          { title:"Flash Services PMI",      datetime:"2025-11-21T09:45:00-05:00", impact:"High", currency:"USD" },
+        ]
+      },
+      {
+        label: "Nov 23 – Nov 29, 2025",
+        start: "2025-11-23",
+        end:   "2025-11-29",
+        items: [
+          { title:"Prelim GDP q/q",           datetime:"2025-11-26T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Unemployment Claims",      datetime:"2025-11-26T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Core PCE Price Index m/m", datetime:"2025-11-26T10:00:00-05:00", impact:"High", currency:"USD" },
+        ]
+      },
+      {
+        label: "Nov 30 – Dec 6, 2025",
+        start: "2025-11-30",
+        end:   "2025-12-06",
+        items: [
+          { title:"ISM Manufacturing PMI",        datetime:"2025-12-01T10:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"JOLTS Job Openings",          datetime:"2025-12-02T10:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"ADP Non-Farm Employment Change", datetime:"2025-12-03T08:15:00-05:00", impact:"High", currency:"USD" },
+          { title:"ISM Services PMI",            datetime:"2025-12-03T10:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"Unemployment Claims",         datetime:"2025-12-04T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Average Hourly Earnings m/m", datetime:"2025-12-05T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Non-Farm Employment Change",  datetime:"2025-12-05T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Unemployment Rate",           datetime:"2025-12-05T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Prelim UoM Consumer Sentiment",    datetime:"2025-12-05T10:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"Prelim UoM Inflation Expectations", datetime:"2025-12-05T10:00:00-05:00", impact:"High", currency:"USD" },
+        ]
+      },
+      {
+        label: "Dec 7 – Dec 13, 2025",
+        start: "2025-12-07",
+        end:   "2025-12-13",
+        items: [
+          { title:"Core CPI m/m",      datetime:"2025-12-10T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"CPI m/m",           datetime:"2025-12-10T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"CPI y/y",           datetime:"2025-12-10T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Federal Funds Rate",          datetime:"2025-12-10T14:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"FOMC Economic Projections",  datetime:"2025-12-10T14:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"FOMC Statement",             datetime:"2025-12-10T14:00:00-05:00", impact:"High", currency:"USD" },
+          { title:"FOMC Press Conference",      datetime:"2025-12-10T14:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Core PPI m/m",      datetime:"2025-12-11T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"PPI m/m",           datetime:"2025-12-11T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Unemployment Claims", datetime:"2025-12-11T08:30:00-05:00", impact:"High", currency:"USD" },
+        ]
+      },
+      {
+        label: "Dec 14 – Dec 20, 2025",
+        start: "2025-12-14",
+        end:   "2025-12-20",
+        items: [
+          { title:"Flash Manufacturing PMI", datetime:"2025-12-16T09:45:00-05:00", impact:"High", currency:"USD" },
+          { title:"Flash Services PMI",      datetime:"2025-12-16T09:45:00-05:00", impact:"High", currency:"USD" },
+          { title:"Core Retail Sales m/m",   datetime:"2025-12-17T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Retail Sales m/m",        datetime:"2025-12-17T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Unemployment Claims",     datetime:"2025-12-18T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Final GDP q/q",           datetime:"2025-12-19T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Core PCE Price Index m/m", datetime:"2025-12-19T10:00:00-05:00", impact:"High", currency:"USD" },
+        ]
+      },
+      {
+        label: "Dec 21 – Dec 27, 2025",
+        start: "2025-12-21",
+        end:   "2025-12-27",
+        items: [
+          { title:"Unemployment Claims", datetime:"2025-12-24T08:30:00-05:00", impact:"High", currency:"USD" },
+          { title:"Bank Holiday",       datetime:"2025-12-25T00:00:00-05:00", impact:"Holiday", currency:"USD", timeLabel:"All Day" },
+        ]
+      },
     ];
 
     /* ===== helpers ===== */
-    function saveCache(items){ try{ localStorage.setItem(CACHE_KEY, JSON.stringify({ts:Date.now(), items})); }catch{} }
-    function loadCache(){ try{ return JSON.parse(localStorage.getItem(CACHE_KEY))||null; }catch{ return null; } }
     function monthDay(dt){ return new Intl.DateTimeFormat([], {month:'short', day:'2-digit'}).format(dt); }
-    function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'2-digit', minute:'2-digit'}).format(dt); }
+    function hhmm(dt){ return new Intl.DateTimeFormat([], {hour:'numeric', minute:'2-digit'}).format(dt); }
 
-    /* ===== Heatbar / US30 % ===== */
+    /* ===== Heatbar / US30 % (kept from your original) ===== */
+    const WORKER = "https://green-haze-8240.mikaelalexiou.workers.dev/";
+
     function setUS30Pct(pct, sourceLabel){
       const val=document.getElementById('hbVal');
       const fill=document.getElementById('hbFill');
@@ -118,15 +268,15 @@
       src.textContent = sourceLabel || '';
     }
 
-    let hbInterval = 180000; // 3m, backoff on fail
+    let hbInterval = 180000; // 3m
     async function fetchUS30(){
-      const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`, "DJI");
+      const pct1 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=%5EDJI")}`);
       if (pct1 != null) { setUS30Pct(pct1, "DJI"); scheduleNext(true); return; }
 
-      const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`, "DJI*");
+      const pct2 = await getPctFromChart(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?range=1d&interval=1m")}`);
       if (pct2 != null) { setUS30Pct(pct2, "DJI*"); scheduleNext(true); return; }
 
-      const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`, "DIA");
+      const pct3 = await getPctVia(`${WORKER}/?url=${encodeURIComponent("https://query1.finance.yahoo.com/v7/finance/quote?symbols=DIA")}`);
       if (pct3 != null) { setUS30Pct(pct3, "DIA"); scheduleNext(true); return; }
 
       scheduleNext(false);
@@ -135,7 +285,7 @@
       hbInterval = success ? 180000 : Math.min(hbInterval * 1.7, 15*60*1000);
       setTimeout(fetchUS30, hbInterval + Math.floor(Math.random()*5000));
     }
-    async function getPctVia(url,label){
+    async function getPctVia(url){
       try{
         const r = await fetch(url, { cache:"no-store" });
         if(!r.ok) return null;
@@ -148,7 +298,7 @@
         return null;
       }catch{ return null; }
     }
-    async function getPctFromChart(url,label){
+    async function getPctFromChart(url){
       try{
         const r = await fetch(url, { cache:"no-store" });
         if(!r.ok) return null;
@@ -176,47 +326,87 @@
         const li=tpl.content.firstElementChild.cloneNode(true);
         const dstr=e.datetime||"";
         let isToday=false;
-        if(!isToday){
-          const dt=new Date(dstr);
-          if(!isNaN(dt)) isToday=dt.toISOString().slice(0,10)===todayISO;
-        }
+        const dt=new Date(dstr);
+        if(!isNaN(dt)) isToday = dt.toISOString().slice(0,10)===todayISO;
         if(isToday){ li.classList.add('today'); todays++; }
 
         li.querySelector('.title').textContent=e.title;
-        const badges=li.querySelector('.badges');
-        const b1=document.createElement('span'); b1.className='badge'; b1.textContent='USD'; badges.appendChild(b1);
-        const b2=document.createElement('span'); b2.className='badge high'; b2.textContent='High'; badges.appendChild(b2);
 
-        const dtTry=new Date(dstr);
-        const whenText=isNaN(dtTry)? dstr : `${monthDay(dtTry)} at ${hhmm(dtTry)}`;
+        const badges=li.querySelector('.badges');
+        const b1=document.createElement('span'); b1.className='badge'; b1.textContent=e.currency || 'USD'; badges.appendChild(b1);
+
+        const impactText = e.impact || 'High';
+        const b2=document.createElement('span');
+        b2.className = impactText === 'High' ? 'badge high' : 'badge';
+        b2.textContent = impactText;
+        badges.appendChild(b2);
+
+        let whenText;
+        if(!isNaN(dt)){
+          if(e.timeLabel){
+            whenText = `${monthDay(dt)} · ${e.timeLabel}`;
+          }else{
+            whenText = `${monthDay(dt)} at ${hhmm(dt)}`;
+          }
+        }else{
+          whenText = dstr;
+        }
         li.querySelector('.when').textContent=whenText;
-        li.querySelector('.meta').textContent=e.actual ? `Impact: High · ${e.actual}` : 'Impact: High';
+
+        const meta = li.querySelector('.meta');
+        if(e.actual){
+          meta.textContent = `Impact: ${impactText} · ${e.actual}`;
+        }else{
+          meta.textContent = `Impact: ${impactText}`;
+        }
+
         list.appendChild(li);
       }
 
-      note.textContent = `Showing ${todays} high-impact USD event${todays===1?'':'s'} today (highlighted).`;
+      note.textContent = `Showing ${items.length} high-impact USD event${items.length===1?'':'s'} in this week. ${todays ? todays + " are today (highlighted)." : "No events today in this week."}`;
       document.getElementById('updated').textContent='Updated: '+new Date().toLocaleString();
     }
 
-    /* ===== load data ===== */
-    (async function(){
-      let items=[];
-      try{
-        const r=await fetch(WORKER,{cache:"no-store"});
-        if(r.ok){
-          const payload=await r.json();
-          if(payload && payload.items) items=payload.items;
-        }
-      }catch{}
-      if(!items.length){
-        const c=loadCache();
-        if(c?.items?.length) items=c.items;
-      }
-      if(!items.length){ items=SEED_ITEMS; } else { saveCache(items); }
-      render(items);
-    })();
+    /* ===== week navigation ===== */
+    const weekLabelEl = document.getElementById('weekLabel');
+    const prevBtn = document.getElementById('prevWeek');
+    const nextBtn = document.getElementById('nextWeek');
 
-    // start the gauge refresher
+    function findInitialWeekIndex(){
+      const today = new Date().toISOString().slice(0,10);
+      for(let i=0;i<WEEKS.length;i++){
+        const w=WEEKS[i];
+        if(w.start <= today && today <= w.end) return i;
+      }
+      // default to first week if today isn't inside any defined range
+      return 0;
+    }
+
+    let currentWeekIndex = findInitialWeekIndex();
+
+    function renderWeek(index){
+      currentWeekIndex = index;
+      const w = WEEKS[currentWeekIndex];
+      weekLabelEl.textContent = w.label;
+      render(w.items);
+
+      const isFirst = currentWeekIndex === 0;
+      const isLast  = currentWeekIndex === WEEKS.length - 1;
+      prevBtn.disabled = isFirst;
+      nextBtn.disabled = isLast;
+      prevBtn.classList.toggle('disabled', isFirst);
+      nextBtn.classList.toggle('disabled', isLast);
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if(currentWeekIndex > 0) renderWeek(currentWeekIndex - 1);
+    });
+    nextBtn.addEventListener('click', () => {
+      if(currentWeekIndex < WEEKS.length - 1) renderWeek(currentWeekIndex + 1);
+    });
+
+    /* ===== init ===== */
+    renderWeek(currentWeekIndex);
     fetchUS30();
   </script>
 </body>
